@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "messageai",
-    "slug": "messageai",
+    "name": "Aligna",
+    "slug": "aligna",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "messageai",
+    "scheme": "aligna",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -15,10 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.messageai.app",
+      "bundleIdentifier": "com.aligna.app",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "MessageAI needs access to your photo library to upload profile pictures.",
-        "NSCameraUsageDescription": "MessageAI needs access to your camera to take profile pictures."
+        "NSPhotoLibraryUsageDescription": "Aligna needs access to your photo library to upload profile pictures.",
+        "NSCameraUsageDescription": "Aligna needs access to your camera to take profile pictures."
       }
     },
     "android": {
@@ -26,8 +26,12 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.messageai.app",
+      "package": "com.aligna.app",
       "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "NOTIFICATIONS",
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
@@ -56,10 +60,24 @@
           "color": "#007AFF",
           "sounds": []
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "959a4a20-d212-4ae5-b895-ce1648f087a0"
+      }
+    },
+    "owner": "nsscooo",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/959a4a20-d212-4ae5-b895-ce1648f087a0"
     }
   }
 }

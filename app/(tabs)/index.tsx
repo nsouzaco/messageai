@@ -87,7 +87,7 @@ export default function ChatListScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Messages</Text>
+        <Text style={styles.headerTitle}>Chats</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.headerButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color="#007AFF" />

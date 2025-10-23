@@ -1,3 +1,4 @@
+import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAuthErrorMessage } from '@/utils/errorMessages';
 import { isValidEmail } from '@/utils/helpers';
@@ -57,7 +58,9 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>Welcome to MessageAI</Text>
+        <View style={styles.logoContainer}>
+          <Logo size="large" variant="dark" />
+        </View>
         <Text style={styles.subtitle}>Sign in to continue</Text>
 
         <View style={styles.form}>
@@ -122,12 +125,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 8,
-    textAlign: 'center',
+  logoContainer: {
+    marginBottom: 16,
+    alignItems: 'center',
   },
   subtitle: {
     fontSize: 16,

@@ -1,3 +1,4 @@
+import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAuthErrorMessage } from '@/utils/errorMessages';
 import { isValidEmail } from '@/utils/helpers';
@@ -77,7 +78,9 @@ export default function RegisterScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
-          <Text style={styles.title}>Create Account</Text>
+          <View style={styles.logoContainer}>
+            <Logo size="large" variant="dark" />
+          </View>
           <Text style={styles.subtitle}>Sign up to get started</Text>
 
           <View style={styles.form}>
@@ -180,12 +183,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 40,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 8,
-    textAlign: 'center',
+  logoContainer: {
+    marginBottom: 16,
+    alignItems: 'center',
   },
   subtitle: {
     fontSize: 16,

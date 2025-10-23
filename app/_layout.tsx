@@ -126,6 +126,8 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="chat/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="create-conversation" options={{ presentation: 'modal', title: 'New Chat' }} />
+        <Stack.Screen name="group-info/[id]" options={{ presentation: 'modal', title: 'Group Info' }} />
+        <Stack.Screen name="thread/[id]" options={{ presentation: 'modal', title: 'Thread' }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>

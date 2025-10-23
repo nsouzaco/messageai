@@ -191,10 +191,13 @@ export const listenToMessages = (
   );
 
   return onSnapshot(q, (snapshot) => {
-    const messages: Message[] = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Message[];
+    const messages: Message[] = snapshot.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      // Filter out thread replies - only show top-level messages
+      .filter((msg: Message) => !msg.threadId) as Message[];
 
     callback(messages);
   });
@@ -210,6 +213,17 @@ export const markMessagesAsRead = async (
   try {
     const batch = writeBatch(firestore);
 
+    // Get conversation to know the participants
+    const conversationRef = doc(firestore, 'conversations', conversationId);
+    const conversationSnap = await getDoc(conversationRef);
+    
+    if (!conversationSnap.exists()) {
+      throw new Error('Conversation not found');
+    }
+
+    const conversation = conversationSnap.data() as Conversation;
+    const participants = conversation.participants;
+
     // Get all unread messages
     const q = query(collection(firestore, `conversations/${conversationId}/messages`));
     const snapshot = await getDocs(q);
@@ -217,15 +231,26 @@ export const markMessagesAsRead = async (
     snapshot.docs.forEach((doc) => {
       const message = doc.data() as Message;
       if (!message.readBy.includes(userId)) {
+        // Add user to readBy array
+        const newReadBy = [...message.readBy, userId];
+        
+        // Check if ALL participants (except sender) have now read the message
+        const otherParticipants = participants.filter(
+          (p: string) => p !== message.senderId
+        );
+        const allRead = otherParticipants.every((p: string) => newReadBy.includes(p));
+        
+        // Only set to READ if all participants have read
+        const newStatus = allRead ? DeliveryStatus.READ : DeliveryStatus.SENT;
+
         batch.update(doc.ref, {
           readBy: arrayUnion(userId),
-          deliveryStatus: DeliveryStatus.READ,
+          deliveryStatus: newStatus,
         });
       }
     });
 
     // Reset unread count for this user
-    const conversationRef = doc(firestore, 'conversations', conversationId);
     batch.update(conversationRef, {
       [`unreadCount.${userId}`]: 0,
     });
@@ -313,6 +338,113 @@ export const getUsersByIds = async (userIds: string[]): Promise<User[]> => {
   } catch (error) {
     console.error('Error getting users by IDs:', error);
     return [];
+  }
+};
+
+/**
+ * Send a threaded reply to a message
+ */
+export const sendThreadReply = async (
+  conversationId: string,
+  parentMessageId: string,
+  text: string,
+  senderId: string
+): Promise<string> => {
+  try {
+    // Create the thread reply message
+    const threadMessage: Omit<Message, 'id'> = {
+      conversationId,
+      senderId,
+      text,
+      timestamp: Date.now(),
+      deliveryStatus: DeliveryStatus.SENT,
+      readBy: [senderId],
+      isSynced: true,
+      threadId: parentMessageId, // Link to parent message
+    };
+
+    const messagesRef = collection(firestore, `conversations/${conversationId}/messages`);
+    const newMessageRef = await addDoc(messagesRef, threadMessage);
+
+    // Mark parent as having a thread
+    const parentMessageRef = doc(firestore, `conversations/${conversationId}/messages/${parentMessageId}`);
+    await updateDoc(parentMessageRef, {
+      hasThread: true,
+    });
+
+    return newMessageRef.id;
+  } catch (error: any) {
+    console.error('Error sending thread reply:', error);
+    throw new Error(error.message || 'Failed to send thread reply');
+  }
+};
+
+/**
+ * Listen to thread replies for a specific message
+ */
+export const listenToThreadReplies = (
+  conversationId: string,
+  parentMessageId: string,
+  callback: (replies: Message[], replyCount: number) => void
+) => {
+  const messagesRef = collection(firestore, `conversations/${conversationId}/messages`);
+  const q = query(
+    messagesRef,
+    where('threadId', '==', parentMessageId),
+    orderBy('timestamp', 'asc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const replies: Message[] = [];
+    snapshot.forEach((doc) => {
+      replies.push({ id: doc.id, ...doc.data() } as Message);
+    });
+    
+    // Pass both replies and the actual count
+    callback(replies, replies.length);
+  });
+};
+
+/**
+ * Get the reply count for a message by querying actual replies
+ */
+export const getReplyCount = async (
+  conversationId: string,
+  parentMessageId: string
+): Promise<number> => {
+  try {
+    const messagesRef = collection(firestore, `conversations/${conversationId}/messages`);
+    const q = query(
+      messagesRef,
+      where('threadId', '==', parentMessageId)
+    );
+    
+    const snapshot = await getDocs(q);
+    return snapshot.size;
+  } catch (error) {
+    console.error('Error getting reply count:', error);
+    return 0;
+  }
+};
+
+/**
+ * Get parent message details
+ */
+export const getParentMessage = async (
+  conversationId: string,
+  messageId: string
+): Promise<Message | null> => {
+  try {
+    const messageRef = doc(firestore, `conversations/${conversationId}/messages/${messageId}`);
+    const messageDoc = await getDoc(messageRef);
+    
+    if (messageDoc.exists()) {
+      return { id: messageDoc.id, ...messageDoc.data() } as Message;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting parent message:', error);
+    return null;
   }
 };
 

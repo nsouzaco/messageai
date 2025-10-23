@@ -1,10 +1,12 @@
-import React, { createContext, ReactNode, useContext, useEffect, useReducer } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useReducer, useRef } from 'react';
 import {
-  markMessagesAsRead as firebaseMarkAsRead,
-  sendMessage as firebaseSendMessage,
-  getUsersByIds,
-  listenToConversations,
-  listenToMessages,
+    markMessagesAsRead as firebaseMarkAsRead,
+    sendMessage as firebaseSendMessage,
+    sendThreadReply as firebaseSendThreadReply,
+    getUsersByIds,
+    listenToConversations,
+    listenToMessages,
+    listenToThreadReplies,
 } from '../services/firebase/firestore';
 import { ChatState, Conversation, DeliveryStatus, Message } from '../types';
 import { generateTempId } from '../utils/helpers';
@@ -19,19 +21,29 @@ type ChatAction =
   | { type: 'SET_MESSAGES'; payload: { conversationId: string; messages: Message[] } }
   | { type: 'ADD_OPTIMISTIC_MESSAGE'; payload: Message }
   | { type: 'UPDATE_MESSAGE'; payload: { conversationId: string; message: Message } }
+  | { type: 'SET_THREAD_MESSAGES'; payload: { parentMessageId: string; messages: Message[]; replyCount: number } }
+  | { type: 'ADD_THREAD_MESSAGE'; payload: { parentMessageId: string; message: Message } }
   | { type: 'CLEAR_CHAT_STATE' };
 
+// Extended ChatState with thread support
+interface ExtendedChatState extends ChatState {
+  threadMessages: { [parentMessageId: string]: Message[] };
+  threadReplyCounts: { [parentMessageId: string]: number };
+}
+
 // Initial state
-const initialState: ChatState = {
+const initialState: ExtendedChatState = {
   conversations: [],
   activeConversationId: null,
   messages: {},
+  threadMessages: {},
+  threadReplyCounts: {},
   loading: false,
   error: null,
 };
 
 // Reducer
-const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
+const chatReducer = (state: ExtendedChatState, action: ChatAction): ExtendedChatState => {
   switch (action.type) {
     case 'CHAT_LOADING':
       return { ...state, loading: true, error: null };
@@ -75,6 +87,29 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
         },
       };
     }
+    case 'SET_THREAD_MESSAGES':
+      return {
+        ...state,
+        threadMessages: {
+          ...state.threadMessages,
+          [action.payload.parentMessageId]: action.payload.messages,
+        },
+        threadReplyCounts: {
+          ...state.threadReplyCounts,
+          [action.payload.parentMessageId]: action.payload.replyCount,
+        },
+      };
+    case 'ADD_THREAD_MESSAGE': {
+      const { parentMessageId, message } = action.payload;
+      const existingThreadMessages = state.threadMessages[parentMessageId] || [];
+      return {
+        ...state,
+        threadMessages: {
+          ...state.threadMessages,
+          [parentMessageId]: [...existingThreadMessages, message],
+        },
+      };
+    }
     case 'CLEAR_CHAT_STATE':
       return initialState;
     default:
@@ -83,11 +118,13 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
 };
 
 // Context type
-interface ChatContextType extends ChatState {
+interface ChatContextType extends ExtendedChatState {
   setActiveConversation: (conversationId: string | null) => void;
   sendMessage: (conversationId: string, text: string) => Promise<void>;
   markMessagesAsRead: (conversationId: string) => Promise<void>;
   refreshConversations: () => void;
+  sendThreadReply: (conversationId: string, parentMessageId: string, text: string) => Promise<void>;
+  listenToThread: (conversationId: string, parentMessageId: string) => void;
 }
 
 // Create context
@@ -102,6 +139,7 @@ interface ChatProviderProps {
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(chatReducer, initialState);
   const { user, isAuthenticated } = useAuth();
+  const threadListeners = useRef<{ [key: string]: () => void }>({});
 
   // Listen to conversations
   useEffect(() => {
@@ -240,12 +278,58 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     // This is mainly for pull-to-refresh functionality
   };
 
+  // Send thread reply
+  const sendThreadReply = async (
+    conversationId: string,
+    parentMessageId: string,
+    text: string
+  ) => {
+    if (!user) throw new Error('No user logged in');
+
+    try {
+      await firebaseSendThreadReply(conversationId, parentMessageId, text, user.id);
+    } catch (error: any) {
+      console.error('Error sending thread reply:', error);
+      dispatch({ type: 'CHAT_ERROR', payload: error.message });
+      throw error;
+    }
+  };
+
+  // Listen to thread replies
+  const listenToThread = (conversationId: string, parentMessageId: string) => {
+    const listenerKey = `${conversationId}_${parentMessageId}`;
+
+    // Clean up existing listener if any
+    if (threadListeners.current[listenerKey]) {
+      threadListeners.current[listenerKey]();
+    }
+
+    // Set up new listener
+    const unsubscribe = listenToThreadReplies(conversationId, parentMessageId, (replies, replyCount) => {
+      dispatch({
+        type: 'SET_THREAD_MESSAGES',
+        payload: { parentMessageId, messages: replies, replyCount },
+      });
+    });
+
+    threadListeners.current[listenerKey] = unsubscribe;
+  };
+
+  // Clean up thread listeners on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(threadListeners.current).forEach((unsubscribe) => unsubscribe());
+    };
+  }, []);
+
   const value: ChatContextType = {
     ...state,
     setActiveConversation,
     sendMessage,
     markMessagesAsRead,
     refreshConversations,
+    sendThreadReply,
+    listenToThread,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

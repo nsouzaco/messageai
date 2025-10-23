@@ -39,6 +39,9 @@ export interface Message {
   readBy: string[];
   isSynced: boolean;
   tempId?: string; // For optimistic updates
+  threadId?: string; // ID of parent message if this is a reply
+  replyCount?: number; // Number of replies (only on parent messages)
+  hasThread?: boolean; // Quick check if message has replies
 }
 
 // Conversation Interface

@@ -1,3 +1,4 @@
+import MessageActionMenu from '@/components/MessageActionMenu';
 import MessageBubble from '@/components/MessageBubble';
 import MessageInput from '@/components/MessageInput';
 import PresenceIndicator from '@/components/PresenceIndicator';
@@ -11,15 +12,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function ChatScreen() {
@@ -27,11 +28,13 @@ export default function ChatScreen() {
   const conversationId = id as string;
   const router = useRouter();
   const { user } = useAuth();
-  const { conversations, messages, setActiveConversation, sendMessage, markMessagesAsRead } = useChat();
+  const { conversations, messages, threadReplyCounts, setActiveConversation, sendMessage, markMessagesAsRead, listenToThread } = useChat();
   
   const [typingUsers, setTypingUsers] = useState<TypingStatus[]>([]);
   const [otherUserPresence, setOtherUserPresence] = useState<Presence | null>(null);
   const [sending, setSending] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [showActionMenu, setShowActionMenu] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const conversation = conversations.find((c) => c.id === conversationId);
@@ -45,6 +48,18 @@ export default function ChatScreen() {
       setActiveConversation(null);
     };
   }, [conversationId]);
+
+  // Listen to thread counts for messages that have threads
+  useEffect(() => {
+    if (!conversation) return;
+
+    // Set up listeners for any message that has a thread
+    conversationMessages.forEach((message) => {
+      if (message.hasThread) {
+        listenToThread(conversationId, message.id);
+      }
+    });
+  }, [conversationMessages, conversationId, listenToThread]);
 
   // Listen to typing indicators
   useEffect(() => {
@@ -123,6 +138,34 @@ export default function ChatScreen() {
     return otherUser?.profilePicture;
   };
 
+  const handleHeaderPress = () => {
+    if (conversation?.type === ConversationType.GROUP) {
+      router.push({
+        pathname: '/group-info/[id]',
+        params: { id: conversationId }
+      });
+    }
+  };
+
+  const handleLongPressMessage = (message: Message) => {
+    setSelectedMessage(message);
+    setShowActionMenu(true);
+  };
+
+  const handleReplyInThread = (message: Message) => {
+    router.push({
+      pathname: '/thread/[id]',
+      params: { id: `${conversationId}_${message.id}` }
+    });
+  };
+
+  const handleOpenThread = (message: Message) => {
+    router.push({
+      pathname: '/thread/[id]',
+      params: { id: `${conversationId}_${message.id}` }
+    });
+  };
+
   const renderMessage = ({ item, index }: { item: Message; index: number }) => {
     const isOwnMessage = item.senderId === user?.id;
     const showSenderName = conversation?.type === ConversationType.GROUP && !isOwnMessage;
@@ -133,12 +176,23 @@ export default function ChatScreen() {
       senderName = sender?.displayName || 'Unknown';
     }
 
+    // Don't show thread replies in main chat
+    if (item.threadId) return null;
+
+    const messageReplyCount = threadReplyCounts?.[item.id];
+    
     return (
       <MessageBubble
         message={item}
         isOwnMessage={isOwnMessage}
         senderName={senderName}
         showSenderName={showSenderName}
+        conversationType={conversation?.type}
+        participants={conversation?.participantDetails || []}
+        currentUserId={user?.id}
+        onLongPress={handleLongPressMessage}
+        onOpenThread={handleOpenThread}
+        replyCount={typeof messageReplyCount === 'number' ? messageReplyCount : undefined}
       />
     );
   };
@@ -180,7 +234,12 @@ export default function ChatScreen() {
           <Ionicons name="arrow-back" size={24} color="#007AFF" />
         </TouchableOpacity>
 
-        <View style={styles.headerInfo}>
+        <TouchableOpacity
+          style={styles.headerInfo}
+          onPress={handleHeaderPress}
+          disabled={conversation?.type !== ConversationType.GROUP}
+          activeOpacity={conversation?.type === ConversationType.GROUP ? 0.7 : 1}
+        >
           <View style={styles.avatarContainer}>
             {headerImage ? (
               <Image source={{ uri: headerImage }} style={styles.avatar} />
@@ -204,7 +263,7 @@ export default function ChatScreen() {
               <Text style={styles.headerSubtitle}>{headerSubtitle}</Text>
             )}
           </View>
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.headerActions} />
       </View>
@@ -227,6 +286,15 @@ export default function ChatScreen() {
         onSend={handleSendMessage}
         onTyping={handleTyping}
         disabled={sending}
+      />
+
+      {/* Message Action Menu */}
+      <MessageActionMenu
+        visible={showActionMenu}
+        message={selectedMessage}
+        conversationType={conversation?.type}
+        onClose={() => setShowActionMenu(false)}
+        onReplyInThread={handleReplyInThread}
       />
     </KeyboardAvoidingView>
   );
