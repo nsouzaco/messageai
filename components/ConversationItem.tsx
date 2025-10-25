@@ -1,7 +1,8 @@
 import { Conversation, ConversationType } from '@/types';
 import { formatConversationTime, getInitials, truncateText } from '@/utils/helpers';
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CachedImage from './CachedImage';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -51,7 +52,7 @@ export default function ConversationItem({
     <TouchableOpacity style={styles.container} onPress={onPress}>
       <View style={styles.avatarContainer}>
         {imageUrl ? (
-          <Image source={{ uri: imageUrl }} style={styles.avatar} />
+          <CachedImage uri={imageUrl} style={styles.avatar} borderRadius={28} />
         ) : (
           <View style={styles.avatarPlaceholder}>
             <Text style={styles.avatarText}>{getInitials(name)}</Text>

@@ -43,6 +43,18 @@ export default function ChatListScreen() {
     }
   };
 
+  const handleNavigateSearch = () => {
+    router.push('/search');
+  };
+
+  const handleNavigateActionItems = () => {
+    router.push('/action-items');
+  };
+
+  const handleNavigateDecisions = () => {
+    router.push('/decisions');
+  };
+
   const renderConversation = ({ item }: { item: Conversation }) => {
     if (!user) return null;
     
@@ -95,6 +107,22 @@ export default function ChatListScreen() {
         </View>
       </View>
 
+      {/* AI Features Quick Access */}
+      <View style={styles.aiQuickAccess}>
+        <TouchableOpacity style={styles.aiButton} onPress={handleNavigateSearch}>
+          <Ionicons name="search" size={20} color="#007AFF" />
+          <Text style={styles.aiButtonText}>Search</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.aiButton} onPress={handleNavigateActionItems}>
+          <Ionicons name="checkbox-outline" size={20} color="#007AFF" />
+          <Text style={styles.aiButtonText}>Tasks</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.aiButton} onPress={handleNavigateDecisions}>
+          <Ionicons name="bulb-outline" size={20} color="#007AFF" />
+          <Text style={styles.aiButtonText}>Decisions</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
         data={conversations}
         renderItem={renderConversation}
@@ -141,6 +169,36 @@ const styles = StyleSheet.create({
   },
   headerButton: {
     padding: 4,
+  },
+  aiQuickAccess: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#F9F9F9',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+    gap: 8,
+  },
+  aiButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  aiButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#007AFF',
   },
   emptyList: {
     flexGrow: 1,

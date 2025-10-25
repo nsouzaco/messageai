@@ -1,3 +1,4 @@
+import CachedImage from '@/components/CachedImage';
 import { useAuth } from '@/contexts/AuthContext';
 import { uploadProfilePicture } from '@/services/firebase/storage';
 import { OnlineStatus } from '@/types';
@@ -6,14 +7,13 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function SettingsScreen() {
@@ -88,7 +88,7 @@ export default function SettingsScreen() {
               <ActivityIndicator color="#fff" />
             </View>
           ) : user.profilePicture ? (
-            <Image source={{ uri: user.profilePicture }} style={styles.avatar} />
+            <CachedImage uri={user.profilePicture} style={styles.avatar} borderRadius={50} />
           ) : (
             <View style={styles.avatarPlaceholder}>
               <Text style={styles.avatarText}>{getInitials(user.displayName)}</Text>

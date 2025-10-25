@@ -1,7 +1,10 @@
+import AIButton from '@/components/AIButton';
 import MessageBubble from '@/components/MessageBubble';
 import MessageInput from '@/components/MessageInput';
+import ThreadSummaryCard from '@/components/ThreadSummaryCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChat } from '@/contexts/ChatContext';
+import { summarizeThread, ThreadSummary } from '@/services/firebase/ai';
 import { getParentMessage } from '@/services/firebase/firestore';
 import { Message } from '@/types';
 import { formatMessageTime } from '@/utils/helpers';
@@ -10,12 +13,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
     KeyboardAvoidingView,
     Platform,
     StyleSheet,
     Text,
-    View,
+    View
 } from 'react-native';
 
 export default function ThreadScreen() {
@@ -31,6 +35,9 @@ export default function ThreadScreen() {
   const [parentMessage, setParentMessage] = useState<Message | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [summary, setSummary] = useState<ThreadSummary | null>(null);
+  const [summarizing, setSummarizing] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
 
   const replies = threadMessages[parentMessageId] || [];
 
@@ -56,10 +63,37 @@ export default function ThreadScreen() {
     setSending(true);
     try {
       await sendReply(conversationId, parentMessageId, text.trim());
+      // Invalidate summary when new reply is added
+      if (summary) {
+        setSummary(null);
+        setShowSummary(false);
+      }
     } catch (error) {
       console.error('Error sending thread reply:', error);
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleSummarizeThread = async () => {
+    if (replies.length < 3) {
+      Alert.alert(
+        'Not enough messages',
+        'At least 3 replies are needed to generate a summary.'
+      );
+      return;
+    }
+
+    setSummarizing(true);
+    try {
+      const result = await summarizeThread(conversationId, parentMessageId);
+      setSummary(result);
+      setShowSummary(true);
+    } catch (error: any) {
+      console.error('Error summarizing thread:', error);
+      Alert.alert('Error', error.message || 'Failed to generate summary. Please try again.');
+    } finally {
+      setSummarizing(false);
     }
   };
 
@@ -71,8 +105,25 @@ export default function ThreadScreen() {
     return (
       <View style={styles.parentMessageContainer}>
         <View style={styles.parentMessageHeader}>
-          <Ionicons name="chatbox-outline" size={16} color="#666" />
-          <Text style={styles.parentMessageLabel}>Thread</Text>
+          <View style={styles.headerLeft}>
+            <Ionicons name="chatbox-outline" size={16} color="#666" />
+            <Text style={styles.parentMessageLabel}>Thread</Text>
+            {replies.length > 0 && (
+              <Text style={styles.replyCount}>
+                {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+              </Text>
+            )}
+          </View>
+          {replies.length >= 3 && (
+            <AIButton
+              onPress={handleSummarizeThread}
+              label={summary && showSummary ? 'Refresh' : 'Summarize'}
+              icon="sparkles"
+              loading={summarizing}
+              variant="secondary"
+              size="small"
+            />
+          )}
         </View>
         <View style={styles.parentMessage}>
           <View style={styles.parentMessageBubble}>
@@ -124,6 +175,18 @@ export default function ThreadScreen() {
     >
       <View style={styles.content}>
         {renderParentMessage()}
+        
+        {/* AI Summary */}
+        {summary && showSummary && (
+          <ThreadSummaryCard
+            summary={summary.summary}
+            bulletPoints={summary.bulletPoints}
+            messageCount={summary.messageCount}
+            generatedAt={summary.generatedAt}
+            cached={summary.cached}
+            onDismiss={() => setShowSummary(false)}
+          />
+        )}
         
         {replies.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -185,9 +248,21 @@ const styles = StyleSheet.create({
   parentMessageHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 8,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  replyCount: {
+    fontSize: 12,
+    color: '#999',
+    marginLeft: 4,
   },
   parentMessageLabel: {
     fontSize: 14,

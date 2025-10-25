@@ -1,3 +1,4 @@
+import CachedImage from '@/components/CachedImage';
 import MessageActionMenu from '@/components/MessageActionMenu';
 import MessageBubble from '@/components/MessageBubble';
 import MessageInput from '@/components/MessageInput';
@@ -14,7 +15,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -242,7 +242,7 @@ export default function ChatScreen() {
         >
           <View style={styles.avatarContainer}>
             {headerImage ? (
-              <Image source={{ uri: headerImage }} style={styles.avatar} />
+              <CachedImage uri={headerImage} style={styles.avatar} borderRadius={20} />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarText}>{getInitials(headerTitle)}</Text>

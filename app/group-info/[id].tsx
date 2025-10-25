@@ -1,3 +1,4 @@
+import CachedImage from '@/components/CachedImage';
 import PresenceIndicator from '@/components/PresenceIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChat } from '@/contexts/ChatContext';
@@ -8,7 +9,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import {
     ActivityIndicator,
-    Image,
     ScrollView,
     StyleSheet,
     Text,
@@ -70,9 +70,10 @@ export default function GroupInfoScreen() {
             <View key={participant.id} style={styles.participantItem}>
               <View style={styles.participantLeft}>
                 {participant.profilePicture ? (
-                  <Image
-                    source={{ uri: participant.profilePicture }}
+                  <CachedImage
+                    uri={participant.profilePicture}
                     style={styles.participantAvatar}
+                    borderRadius={24}
                   />
                 ) : (
                   <View style={styles.participantAvatarPlaceholder}>

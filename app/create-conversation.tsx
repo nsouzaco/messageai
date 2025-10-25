@@ -1,3 +1,4 @@
+import CachedImage from '@/components/CachedImage';
 import { useAuth } from '@/contexts/AuthContext';
 import { createConversation, getAllUsers, getOrCreateConversation } from '@/services/firebase/firestore';
 import { ConversationType, User } from '@/types';
@@ -9,7 +10,6 @@ import {
     ActivityIndicator,
     Alert,
     FlatList,
-    Image,
     StyleSheet,
     Text,
     TextInput,
@@ -111,7 +111,7 @@ export default function CreateConversationScreen() {
       >
         <View style={styles.userInfo}>
           {item.profilePicture ? (
-            <Image source={{ uri: item.profilePicture }} style={styles.avatar} />
+            <CachedImage uri={item.profilePicture} style={styles.avatar} borderRadius={24} />
           ) : (
             <View style={styles.avatarPlaceholder}>
               <Text style={styles.avatarText}>{getInitials(item.displayName)}</Text>

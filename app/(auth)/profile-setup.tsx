@@ -1,13 +1,13 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { uploadProfilePicture } from '@/services/firebase/storage';
 import { getStorageErrorMessage } from '@/utils/errorMessages';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
-    Image,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -79,7 +79,7 @@ export default function ProfileSetupScreen() {
           disabled={uploading}
         >
           {imageUri ? (
-            <Image source={{ uri: imageUri }} style={styles.image} />
+            <Image source={{ uri: imageUri }} style={styles.image} contentFit="cover" />
           ) : (
             <View style={styles.placeholderContainer}>
               <Text style={styles.placeholderText}>Tap to select image</Text>
