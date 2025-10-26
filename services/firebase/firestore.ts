@@ -14,7 +14,7 @@ import {
     writeBatch
 } from 'firebase/firestore';
 import { firestore } from '../../firebaseConfig';
-import { Conversation, ConversationType, DeliveryStatus, Message, User } from '../../types';
+import { Conversation, ConversationType, DeliveryStatus, Message, MessageType, User } from '../../types';
 
 /**
  * Create a new conversation
@@ -123,7 +123,13 @@ export const listenToConversations = (
 export const sendMessage = async (
   conversationId: string,
   text: string,
-  senderId: string
+  senderId: string,
+  options?: {
+    messageType?: MessageType;
+    imageUrl?: string;
+    audioUrl?: string;
+    audioDuration?: number;
+  }
 ): Promise<Message> => {
   try {
     const batch = writeBatch(firestore);
@@ -139,6 +145,11 @@ export const sendMessage = async (
       deliveryStatus: DeliveryStatus.SENT,
       readBy: [senderId],
       isSynced: true,
+      // Only include optional fields if they're defined
+      ...(options?.messageType && { messageType: options.messageType }),
+      ...(options?.imageUrl && { imageUrl: options.imageUrl }),
+      ...(options?.audioUrl && { audioUrl: options.audioUrl }),
+      ...(options?.audioDuration !== undefined && { audioDuration: options.audioDuration }),
     };
 
     batch.set(messageRef, message);
@@ -158,9 +169,17 @@ export const sendMessage = async (
         }
       });
 
+      // Determine last message text based on message type
+      let lastMessageText = text;
+      if (options?.messageType === MessageType.IMAGE) {
+        lastMessageText = '📷 Photo';
+      } else if (options?.messageType === MessageType.AUDIO) {
+        lastMessageText = '🎤 Voice message';
+      }
+
       batch.update(conversationRef, {
         lastMessage: {
-          text,
+          text: lastMessageText,
           senderId,
           timestamp,
         },

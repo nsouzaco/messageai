@@ -87,7 +87,7 @@ export const deleteProfilePicture = async (imageUrl: string): Promise<void> => {
 };
 
 /**
- * Upload image message (for future use)
+ * Upload image message
  */
 export const uploadImageMessage = async (
   conversationId: string,
@@ -119,6 +119,35 @@ export const uploadImageMessage = async (
   } catch (error: any) {
     console.error('Error uploading image message:', error);
     throw new Error(error.message || 'Failed to upload image');
+  }
+};
+
+/**
+ * Upload audio message
+ */
+export const uploadAudioMessage = async (
+  conversationId: string,
+  senderId: string,
+  audioUri: string
+): Promise<string> => {
+  try {
+    // Convert to blob
+    const response = await fetch(audioUri);
+    const blob = await response.blob();
+
+    // Upload to Firebase Storage
+    const filename = `message_audio/${conversationId}/${senderId}_${Date.now()}.m4a`;
+    const storageRef = ref(storage, filename);
+    
+    await uploadBytes(storageRef, blob);
+
+    // Get download URL
+    const downloadURL = await getDownloadURL(storageRef);
+    
+    return downloadURL;
+  } catch (error: any) {
+    console.error('Error uploading audio message:', error);
+    throw new Error(error.message || 'Failed to upload audio');
   }
 };
 

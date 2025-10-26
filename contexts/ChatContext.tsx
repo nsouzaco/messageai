@@ -8,7 +8,7 @@ import {
     listenToMessages,
     listenToThreadReplies,
 } from '../services/firebase/firestore';
-import { ChatState, Conversation, DeliveryStatus, Message } from '../types';
+import { ChatState, Conversation, DeliveryStatus, Message, MessageType } from '../types';
 import { generateTempId } from '../utils/helpers';
 import { useAuth } from './AuthContext';
 
@@ -120,7 +120,16 @@ const chatReducer = (state: ExtendedChatState, action: ChatAction): ExtendedChat
 // Context type
 interface ChatContextType extends ExtendedChatState {
   setActiveConversation: (conversationId: string | null) => void;
-  sendMessage: (conversationId: string, text: string) => Promise<void>;
+  sendMessage: (
+    conversationId: string,
+    text: string,
+    options?: {
+      messageType?: MessageType;
+      imageUrl?: string;
+      audioUrl?: string;
+      audioDuration?: number;
+    }
+  ) => Promise<void>;
   markMessagesAsRead: (conversationId: string) => Promise<void>;
   refreshConversations: () => void;
   sendThreadReply: (conversationId: string, parentMessageId: string, text: string) => Promise<void>;
@@ -218,7 +227,16 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   };
 
   // Send message with optimistic UI
-  const sendMessage = async (conversationId: string, text: string) => {
+  const sendMessage = async (
+    conversationId: string,
+    text: string,
+    options?: {
+      messageType?: MessageType;
+      imageUrl?: string;
+      audioUrl?: string;
+      audioDuration?: number;
+    }
+  ) => {
     if (!user) throw new Error('No user logged in');
 
     const tempId = generateTempId();
@@ -235,6 +253,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       deliveryStatus: DeliveryStatus.SENDING,
       readBy: [user.id],
       isSynced: false,
+      // Only include optional fields if they're defined
+      ...(options?.messageType && { messageType: options.messageType }),
+      ...(options?.imageUrl && { imageUrl: options.imageUrl }),
+      ...(options?.audioUrl && { audioUrl: options.audioUrl }),
+      ...(options?.audioDuration !== undefined && { audioDuration: options.audioDuration }),
     };
 
     // Add optimistic message to UI immediately
@@ -242,7 +265,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
     try {
       // Send to Firebase
-      const sentMessage = await firebaseSendMessage(conversationId, text, user.id);
+      const sentMessage = await firebaseSendMessage(conversationId, text, user.id, options);
 
       // Update with real message
       dispatch({

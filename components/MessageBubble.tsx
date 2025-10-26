@@ -1,8 +1,9 @@
-import { ConversationType, DeliveryStatus, Message, User } from '@/types';
+import { ConversationType, DeliveryStatus, Message, MessageType, User } from '@/types';
 import { formatMessageTime } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CachedImage from './CachedImage';
 import PriorityBadge from './PriorityBadge';
 
 interface MessageBubbleProps {
@@ -150,11 +151,35 @@ export default function MessageBubble({
             style={[
               styles.bubble,
               isOwnMessage ? styles.ownBubble : styles.otherBubble,
+              message.messageType === MessageType.IMAGE && styles.imageBubble,
             ]}
           >
-            <Text style={[styles.text, isOwnMessage ? styles.ownText : styles.otherText]}>
-              {message.text}
-            </Text>
+            {/* Image Message */}
+            {message.messageType === MessageType.IMAGE && message.imageUrl && (
+              <CachedImage
+                uri={message.imageUrl}
+                style={styles.messageImage}
+                borderRadius={12}
+              />
+            )}
+
+            {/* Audio Message */}
+            {message.messageType === MessageType.AUDIO && message.audioUrl && (
+              <View style={styles.audioMessage}>
+                <Ionicons name="play-circle" size={32} color={isOwnMessage ? '#fff' : '#007AFF'} />
+                <Text style={[styles.text, isOwnMessage ? styles.ownText : styles.otherText]}>
+                  🎤 Voice message {message.audioDuration ? `(${Math.floor(message.audioDuration)}s)` : ''}
+                </Text>
+              </View>
+            )}
+
+            {/* Text Message */}
+            {(!message.messageType || message.messageType === MessageType.TEXT) && message.text && (
+              <Text style={[styles.text, isOwnMessage ? styles.ownText : styles.otherText]}>
+                {message.text}
+              </Text>
+            )}
+
             <View style={styles.footer}>
               <Text style={[styles.time, isOwnMessage ? styles.ownTime : styles.otherTime]}>
                 {formatMessageTime(message.timestamp)}
@@ -218,6 +243,21 @@ const styles = StyleSheet.create({
   otherBubble: {
     backgroundColor: '#FFFFFF',
     borderBottomLeftRadius: 4,
+  },
+  imageBubble: {
+    padding: 0,
+    overflow: 'hidden',
+  },
+  messageImage: {
+    width: 250,
+    height: 250,
+  },
+  audioMessage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
   },
   text: {
     fontSize: 16,

@@ -28,12 +28,23 @@ export interface User {
   createdAt: number;
 }
 
+// Message Type Enum
+export enum MessageType {
+  TEXT = 'text',
+  IMAGE = 'image',
+  AUDIO = 'audio',
+}
+
 // Message Interface
 export interface Message {
   id: string;
   conversationId: string;
   senderId: string;
   text: string;
+  messageType?: MessageType; // Type of message (text, image, audio)
+  imageUrl?: string; // URL for image messages
+  audioUrl?: string; // URL for audio messages
+  audioDuration?: number; // Duration of audio in seconds
   timestamp: number;
   deliveryStatus: DeliveryStatus;
   readBy: string[];

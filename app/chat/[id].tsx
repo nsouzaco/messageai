@@ -7,7 +7,8 @@ import TypingIndicator from '@/components/TypingIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChat } from '@/contexts/ChatContext';
 import { listenToTyping, listenToUserPresence, setUserTyping } from '@/services/firebase/realtimeDb';
-import { ConversationType, Message, OnlineStatus, Presence, TypingStatus } from '@/types';
+import { uploadImageMessage } from '@/services/firebase/storage';
+import { ConversationType, Message, MessageType, OnlineStatus, Presence, TypingStatus } from '@/types';
 import { getInitials } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -151,15 +152,13 @@ export default function ChatScreen() {
       quality: 0.8,
     });
 
-    if (!result.canceled && result.assets[0]) {
-      // TODO: Implement image upload to Firebase Storage and send as message
-      Alert.alert('Photo Selected', 'Image upload will be implemented soon!');
-      console.log('Image URI:', result.assets[0].uri);
+    if (!result.canceled && result.assets[0] && user) {
+      await handleSendImage(result.assets[0].uri);
     }
   };
 
   const handlePickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission needed', 'Photo library permission is required');
       return;
@@ -171,10 +170,34 @@ export default function ChatScreen() {
       quality: 0.8,
     });
 
-    if (!result.canceled && result.assets[0]) {
-      // TODO: Implement image upload to Firebase Storage and send as message
-      Alert.alert('Image Selected', 'Image upload will be implemented soon!');
-      console.log('Image URI:', result.assets[0].uri);
+    if (!result.canceled && result.assets[0] && user) {
+      await handleSendImage(result.assets[0].uri);
+    }
+  };
+
+  const handleSendImage = async (imageUri: string) => {
+    if (!user) return;
+
+    setSending(true);
+    try {
+      // Upload image to Firebase Storage
+      const imageUrl = await uploadImageMessage(conversationId, user.id, imageUri);
+      
+      // Send message with image URL
+      await sendMessage(conversationId, '', {
+        messageType: MessageType.IMAGE,
+        imageUrl,
+      });
+
+      // Scroll to bottom
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    } catch (error) {
+      console.error('Error sending image:', error);
+      Alert.alert('Error', 'Failed to send image. Please try again.');
+    } finally {
+      setSending(false);
     }
   };
 
