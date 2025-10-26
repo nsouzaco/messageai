@@ -1,20 +1,21 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import NetInfo from '@react-native-community/netinfo';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
+import OfflineBanner from '@/components/OfflineBanner';
 import { useColorScheme } from '@/components/useColorScheme';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ChatProvider } from '@/contexts/ChatContext';
-import { getExpoPushToken, requestNotificationPermissions } from '@/services/firebase/notifications';
 
 export {
-    // Catch any errors thrown by the Layout component.
-    ErrorBoundary
+  // Catch any errors thrown by the Layout component.
+  ErrorBoundary
 } from 'expo-router';
 
 export const unstable_settings = {
@@ -60,37 +61,39 @@ function RootLayoutNav() {
   const { isAuthenticated, loading, user, updatePushToken } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const [isOffline, setIsOffline] = useState(false);
 
   // Request notification permissions and register push token
-  useEffect(() => {
-    const registerPushToken = async () => {
-      if (!isAuthenticated || !user) {
-        console.log('⏭️ Skipping push token registration - not authenticated');
-        return;
-      }
+  // TEMPORARILY DISABLED - Will re-enable after fixing infinite loop
+  // useEffect(() => {
+  //   const registerPushToken = async () => {
+  //     if (!isAuthenticated || !user) {
+  //       console.log('⏭️ Skipping push token registration - not authenticated');
+  //       return;
+  //     }
 
-      console.log('🚀 Starting push notification registration...');
+  //     console.log('🚀 Starting push notification registration...');
 
-      // Request permissions
-      const hasPermission = await requestNotificationPermissions();
-      if (!hasPermission) {
-        console.log('⚠️ Notification permissions denied or unavailable');
-        return;
-      }
+  //     // Request permissions
+  //     const hasPermission = await requestNotificationPermissions();
+  //     if (!hasPermission) {
+  //       console.log('⚠️ Notification permissions denied or unavailable');
+  //       return;
+  //     }
 
-      // Get push token
-      const token = await getExpoPushToken();
-      if (token) {
-        // Save token to user profile
-        await updatePushToken(token);
-        console.log('🎉 Push notification setup complete!');
-      } else {
-        console.log('⚠️ Failed to get push token');
-      }
-    };
+  //     // Get push token
+  //     const token = await getExpoPushToken();
+  //     if (token) {
+  //       // Save token to user profile
+  //       await updatePushToken(token);
+  //       console.log('🎉 Push notification setup complete!');
+  //     } else {
+  //       console.log('⚠️ Failed to get push token');
+  //     }
+  //   };
 
-    registerPushToken();
-  }, [isAuthenticated, user]);
+  //   registerPushToken();
+  // }, [isAuthenticated, user]);
 
   // Handle notifications
   useEffect(() => {
@@ -127,6 +130,24 @@ function RootLayoutNav() {
     };
   }, [router]);
 
+  // Monitor network connectivity
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const offline = !state.isConnected || !state.isInternetReachable;
+      setIsOffline(offline);
+      
+      if (offline) {
+        console.log('📡 Network: Offline');
+      } else {
+        console.log('📡 Network: Online');
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   // Handle auth routing
   useEffect(() => {
     if (loading) return;
@@ -157,6 +178,7 @@ function RootLayoutNav() {
         <Stack.Screen name="action-items" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
+      <OfflineBanner isVisible={isOffline} />
     </ThemeProvider>
   );
 }
