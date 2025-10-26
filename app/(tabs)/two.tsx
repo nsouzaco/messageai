@@ -161,16 +161,12 @@ export default function SettingsScreen() {
         </BlurView>
       </View>
 
-      <View style={styles.sectionWrapper}>
-        <BlurView intensity={30} tint="light" style={styles.glassCard}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Actions</Text>
-
-            <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
-              <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
-              <Text style={[styles.actionText, styles.actionTextDanger]}>Logout</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.logoutButtonWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.logoutButtonGlass}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Logout</Text>
+            <Ionicons name="arrow-forward" size={20} color="#fff" />
+          </TouchableOpacity>
         </BlurView>
       </View>
 
@@ -323,19 +319,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
-  actionButton: {
+  logoutButtonWrapper: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 24,
+    borderRadius: 30,
+    overflow: 'hidden',
+    width: '70%',
+    alignSelf: 'center',
+  },
+  logoutButtonGlass: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
+    justifyContent: 'center',
+    backgroundColor: '#FF3B30',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 30,
+    gap: 8,
   },
-  actionText: {
+  logoutButtonText: {
+    color: '#fff',
     fontSize: 16,
-    color: '#000',
-  },
-  actionTextDanger: {
-    color: '#FF3B30',
+    fontWeight: '600',
   },
   footer: {
     alignItems: 'center',
