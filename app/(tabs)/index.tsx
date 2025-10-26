@@ -32,10 +32,6 @@ export default function ChatListScreen() {
     router.push(`/chat/${conversationId}`);
   };
 
-  const handleNewChat = () => {
-    router.push('/create-conversation');
-  };
-
   const renderConversation = ({ item }: { item: Conversation }) => {
     if (!user) return null;
     
@@ -97,10 +93,6 @@ export default function ChatListScreen() {
         }
         showsVerticalScrollIndicator={false}
       />
-
-      <TouchableOpacity style={styles.fab} onPress={handleNewChat}>
-        <Ionicons name="add" size={28} color="#fff" />
-      </TouchableOpacity>
     </LinearGradient>
   );
 }
@@ -146,21 +138,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
-  },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
 });

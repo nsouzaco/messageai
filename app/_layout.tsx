@@ -122,7 +122,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="chat/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="create-conversation" options={{ presentation: 'modal', title: 'New Chat' }} />
+        <Stack.Screen name="create-conversation" options={{ presentation: 'modal', headerShown: false }} />
         <Stack.Screen name="group-info/[id]" options={{ presentation: 'modal', title: 'Group Info' }} />
         <Stack.Screen name="thread/[id]" options={{ presentation: 'modal', title: 'Thread' }} />
         <Stack.Screen name="search" options={{ headerShown: false }} />

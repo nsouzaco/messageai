@@ -4,6 +4,8 @@ import { createConversation, getAllUsers, getOrCreateConversation } from '@/serv
 import { ConversationType, User } from '@/types';
 import { getInitials } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -105,10 +107,12 @@ export default function CreateConversationScreen() {
     const isSelected = selectedUsers.includes(item.id);
 
     return (
-      <TouchableOpacity
-        style={[styles.userItem, isSelected && styles.userItemSelected]}
-        onPress={() => toggleUserSelection(item.id)}
-      >
+      <View style={styles.userItemWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.glassCard}>
+          <TouchableOpacity
+            style={[styles.userItem, isSelected && styles.userItemSelected]}
+            onPress={() => toggleUserSelection(item.id)}
+          >
         <View style={styles.userInfo}>
           {item.profilePicture ? (
             <CachedImage uri={item.profilePicture} style={styles.avatar} borderRadius={24} />
@@ -127,35 +131,47 @@ export default function CreateConversationScreen() {
         {isSelected && (
           <Ionicons name="checkmark-circle" size={24} color="#007AFF" />
         )}
-      </TouchableOpacity>
+          </TouchableOpacity>
+        </BlurView>
+      </View>
     );
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <LinearGradient
+        colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
+        style={styles.loadingContainer}
+      >
         <ActivityIndicator size="large" color="#007AFF" />
-      </View>
+      </LinearGradient>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.cancelButton}>Cancel</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>New Chat</Text>
-        <TouchableOpacity onPress={handleCreate} disabled={creating || selectedUsers.length === 0}>
-          <Text
-            style={[
-              styles.createButton,
-              (creating || selectedUsers.length === 0) && styles.createButtonDisabled,
-            ]}
-          >
-            {creating ? 'Creating...' : 'Create'}
-          </Text>
-        </TouchableOpacity>
+    <LinearGradient
+      colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
+      style={styles.container}
+    >
+      <View style={styles.headerWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.headerGlass}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()}>
+              <Text style={styles.cancelButton}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>New Chat</Text>
+            <TouchableOpacity onPress={handleCreate} disabled={creating || selectedUsers.length === 0}>
+              <Text
+                style={[
+                  styles.createButton,
+                  (creating || selectedUsers.length === 0) && styles.createButtonDisabled,
+                ]}
+              >
+                {creating ? 'Creating...' : 'Create'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </BlurView>
       </View>
 
       {selectedUsers.length > 0 && (
@@ -179,15 +195,19 @@ export default function CreateConversationScreen() {
         </View>
       )}
 
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#999" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search users"
-          placeholderTextColor="#999"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+      <View style={styles.searchWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.searchGlass}>
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color="#999" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search users"
+              placeholderTextColor="#999"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+        </BlurView>
       </View>
 
       <FlatList
@@ -201,20 +221,30 @@ export default function CreateConversationScreen() {
           </View>
         }
       />
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+  },
+  headerWrapper: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  headerGlass: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
   },
   header: {
     flexDirection: 'row',
@@ -223,9 +253,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 60,
     paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    backgroundColor: 'transparent',
   },
   headerTitle: {
     fontSize: 18,
@@ -267,15 +295,23 @@ const styles = StyleSheet.create({
     color: '#000',
     padding: 0,
   },
+  searchWrapper: {
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  searchGlass: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#f5f5f5',
-    marginHorizontal: 16,
-    marginVertical: 12,
-    borderRadius: 12,
+    backgroundColor: 'transparent',
     gap: 8,
   },
   searchInput: {
@@ -285,6 +321,17 @@ const styles = StyleSheet.create({
   },
   usersList: {
     paddingBottom: 20,
+    paddingHorizontal: 12,
+  },
+  userItemWrapper: {
+    marginBottom: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  glassCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
   },
   userItem: {
     flexDirection: 'row',
@@ -292,11 +339,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    backgroundColor: 'transparent',
   },
   userItemSelected: {
-    backgroundColor: '#f0f8ff',
+    backgroundColor: 'rgba(0, 122, 255, 0.1)',
   },
   userInfo: {
     flexDirection: 'row',

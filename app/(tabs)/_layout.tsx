@@ -1,8 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { BlurView } from 'expo-blur';
+import { Tabs, useRouter } from 'expo-router';
 import React from 'react';
+import { TouchableOpacity, View, StyleSheet, Platform } from 'react-native';
 
 export default function TabLayout() {
+  const router = useRouter();
+
   return (
     <Tabs
       screenOptions={{
@@ -10,9 +14,20 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#999',
         headerShown: false,
         tabBarStyle: {
-          borderTopWidth: 1,
-          borderTopColor: '#e0e0e0',
+          position: 'absolute',
+          borderTopWidth: 0,
+          backgroundColor: 'transparent',
+          height: 85,
+          paddingBottom: 30,
+          elevation: 0,
         },
+        tabBarBackground: () => (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ),
       }}>
       <Tabs.Screen
         name="index"
@@ -33,11 +48,21 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="new-chat-placeholder"
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.push('/create-conversation');
+          },
+        }}
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size}) => (
-            <Ionicons name="person" size={size} color={color} />
+          title: '',
+          tabBarIcon: () => (
+            <View style={styles.fabContainer}>
+              <View style={styles.fab}>
+                <Ionicons name="add" size={28} color="#fff" />
+              </View>
+            </View>
           ),
         }}
       />
@@ -51,6 +76,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="two"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size}) => (
+            <Ionicons name="person" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="test-embeddings"
         options={{
           href: null, // Hide from tabs
@@ -59,3 +93,24 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  fabContainer: {
+    top: -20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+});
