@@ -3,6 +3,7 @@ import { formatMessageTime } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import PriorityBadge from './PriorityBadge';
 
 interface MessageBubbleProps {
   message: Message;
@@ -127,6 +128,14 @@ export default function MessageBubble({
       {showSenderName && !isOwnMessage && senderName && (
         <Text style={styles.senderName}>{senderName}</Text>
       )}
+      
+      {/* Priority Badge - shown above message */}
+      {message.aiPriority && (
+        <View style={[styles.priorityContainer, isOwnMessage ? styles.priorityRight : styles.priorityLeft]}>
+          <PriorityBadge priority={message.aiPriority} score={message.priorityScore} />
+        </View>
+      )}
+      
       <TouchableOpacity
         onLongPress={handleLongPress}
         delayLongPress={500}
@@ -237,6 +246,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#007AFF',
     fontWeight: '500',
+  },
+  priorityContainer: {
+    marginBottom: 4,
+  },
+  priorityRight: {
+    alignSelf: 'flex-end',
+    marginRight: 12,
+  },
+  priorityLeft: {
+    alignSelf: 'flex-start',
+    marginLeft: 12,
   },
 });
 

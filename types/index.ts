@@ -42,6 +42,8 @@ export interface Message {
   threadId?: string; // ID of parent message if this is a reply
   replyCount?: number; // Number of replies (only on parent messages)
   hasThread?: boolean; // Quick check if message has replies
+  aiPriority?: 'high' | 'medium' | 'low'; // AI-detected priority level
+  priorityScore?: number; // Priority score (0-100)
 }
 
 // Conversation Interface
