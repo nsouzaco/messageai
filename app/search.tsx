@@ -1,6 +1,8 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { SearchResult, semanticSearch } from '@/services/firebase/ai';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -64,13 +66,15 @@ export default function SearchScreen() {
       item.score > 0.9 ? '#34C759' : item.score > 0.8 ? '#FF9500' : '#999';
 
     return (
-      <TouchableOpacity
-        style={styles.resultCard}
-        onPress={() => {
-          // Navigate to conversation/message
-          router.push(`/chat/${item.conversationId}`);
-        }}
-      >
+      <View style={styles.resultCardWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.glassCard}>
+          <TouchableOpacity
+            style={styles.resultCard}
+            onPress={() => {
+              // Navigate to conversation/message
+              router.push(`/chat/${item.conversationId}`);
+            }}
+          >
         <View style={styles.resultHeader}>
           <View style={styles.resultMeta}>
             <Ionicons name="person-circle-outline" size={16} color="#666" />
@@ -95,7 +99,9 @@ export default function SearchScreen() {
             <Text style={styles.threadBadgeText}>In thread</Text>
           </View>
         )}
-      </TouchableOpacity>
+          </TouchableOpacity>
+        </BlurView>
+      </View>
     );
   };
 
@@ -127,8 +133,13 @@ export default function SearchScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <LinearGradient
+      colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
+      style={styles.container}
+    >
+      <View style={styles.headerWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.headerGlass}>
+          <View style={styles.header}>
         <View style={styles.headerTop}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#007AFF" />
@@ -185,6 +196,8 @@ export default function SearchScreen() {
             </TouchableOpacity>
           </View>
         </View>
+          </View>
+        </BlurView>
       </View>
 
       <FlatList
@@ -203,19 +216,28 @@ export default function SearchScreen() {
           ) : null
         }
       />
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
+  },
+  headerWrapper: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  headerGlass: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
   },
   header: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    backgroundColor: 'transparent',
     paddingTop: 60,
     paddingBottom: 16,
   },
@@ -322,16 +344,20 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 12,
   },
-  resultCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+  resultCardWrapper: {
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  glassCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  resultCard: {
+    backgroundColor: 'transparent',
+    padding: 16,
   },
   resultHeader: {
     flexDirection: 'row',

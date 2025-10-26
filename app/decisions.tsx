@@ -2,6 +2,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { firestore } from '@/firebaseConfig';
 import { Decision } from '@/services/firebase/ai';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
@@ -67,7 +69,9 @@ export default function DecisionsScreen() {
 
   const renderDecision = ({ item }: { item: Decision }) => {
     return (
-      <View style={styles.decisionCard}>
+      <View style={styles.decisionCardWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.glassCard}>
+          <View style={styles.decisionCard}>
         <View style={styles.decisionHeader}>
           <Ionicons name="bulb" size={20} color="#FF9500" />
           <Text style={styles.decisionDate}>{formatDate(item.timestamp)}</Text>
@@ -107,12 +111,16 @@ export default function DecisionsScreen() {
             </Text>
           </View>
         )}
+          </View>
+        </BlurView>
       </View>
     );
   };
 
   const renderHeader = () => (
-    <View style={styles.header}>
+    <View style={styles.headerWrapper}>
+      <BlurView intensity={30} tint="light" style={styles.headerGlass}>
+        <View style={styles.header}>
       <View style={styles.headerTop}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -167,6 +175,8 @@ export default function DecisionsScreen() {
           ))}
         </View>
       )}
+        </View>
+      </BlurView>
     </View>
   );
 
@@ -182,14 +192,20 @@ export default function DecisionsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <LinearGradient
+        colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
+        style={styles.loadingContainer}
+      >
         <ActivityIndicator size="large" color="#007AFF" />
-      </View>
+      </LinearGradient>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
+      style={styles.container}
+    >
       {renderHeader()}
       <FlatList
         data={filteredDecisions}
@@ -202,25 +218,33 @@ export default function DecisionsScreen() {
         }
         ListEmptyComponent={renderEmpty}
       />
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9F9F9',
+  },
+  headerWrapper: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  headerGlass: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
   },
   header: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    backgroundColor: 'transparent',
     paddingTop: 60,
     paddingBottom: 16,
   },
@@ -299,18 +323,22 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  decisionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+  decisionCardWrapper: {
     marginBottom: 12,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  glassCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  decisionCard: {
+    backgroundColor: 'transparent',
+    padding: 16,
     borderLeftWidth: 4,
     borderLeftColor: '#FF9500',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
   decisionHeader: {
     flexDirection: 'row',
