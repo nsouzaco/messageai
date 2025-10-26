@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -23,23 +24,27 @@ type FeatureCardProps = {
 
 function FeatureCard({ icon, iconColor, iconBg, title, description, onPress, badge }: FeatureCardProps) {
   return (
-    <TouchableOpacity style={styles.featureCard} onPress={onPress} activeOpacity={0.7}>
-      <View style={[styles.featureIconContainer, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={28} color={iconColor} />
-      </View>
-      <View style={styles.featureCardContent}>
-        <View style={styles.featureCardHeader}>
-          <Text style={styles.featureCardTitle}>{title}</Text>
-          {badge && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{badge}</Text>
+    <View style={styles.featureCardWrapper}>
+      <BlurView intensity={30} tint="light" style={styles.glassCard}>
+        <TouchableOpacity style={styles.featureCard} onPress={onPress} activeOpacity={0.7}>
+          <View style={[styles.featureIconContainer, { backgroundColor: iconBg }]}>
+            <Ionicons name={icon} size={28} color={iconColor} />
+          </View>
+          <View style={styles.featureCardContent}>
+            <View style={styles.featureCardHeader}>
+              <Text style={styles.featureCardTitle}>{title}</Text>
+              {badge && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{badge}</Text>
+                </View>
+              )}
             </View>
-          )}
-        </View>
-        <Text style={styles.featureCardDescription}>{description}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color="#999" />
-    </TouchableOpacity>
+            <Text style={styles.featureCardDescription}>{description}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#999" />
+        </TouchableOpacity>
+      </BlurView>
+    </View>
   );
 }
 
@@ -129,7 +134,9 @@ export default function AIHubScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>ACTIVE AI FEATURES</Text>
         
-        <View style={styles.aiFeaturesList}>
+        <View style={styles.aiFeatureWrapper}>
+          <BlurView intensity={30} tint="light" style={styles.glassCard}>
+            <View style={styles.aiFeaturesList}>
           <View style={styles.aiFeatureItem}>
             <View style={styles.aiFeatureIcon}>
               <Ionicons name="alert-circle" size={18} color="#FF3B30" />
@@ -171,12 +178,16 @@ export default function AIHubScreen() {
               <Text style={styles.statusText}>Active</Text>
             </View>
           </View>
+            </View>
+          </BlurView>
         </View>
       </View>
 
       {/* Info Section */}
       <View style={styles.section}>
-        <View style={styles.infoCard}>
+        <View style={styles.infoCardWrapper}>
+          <BlurView intensity={30} tint="light" style={styles.glassCard}>
+            <View style={styles.infoCard}>
           <View style={styles.infoHeader}>
             <Ionicons name="information-circle" size={20} color="#007AFF" />
             <Text style={styles.infoTitle}>How it works</Text>
@@ -184,6 +195,8 @@ export default function AIHubScreen() {
           <Text style={styles.infoText}>
             AI features run automatically in the background using OpenAI GPT models to enhance your conversations. All data is processed securely and never shared with third parties.
           </Text>
+            </View>
+          </BlurView>
         </View>
       </View>
 
@@ -242,18 +255,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 4,
   },
+  featureCardWrapper: {
+    marginBottom: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  glassCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+  },
   featureCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: 'transparent',
     padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
   },
   featureIconContainer: {
     width: 56,
@@ -293,15 +309,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
-  aiFeaturesList: {
-    backgroundColor: '#fff',
+  aiFeatureWrapper: {
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+  },
+  aiFeaturesList: {
+    backgroundColor: 'transparent',
   },
   aiFeatureItem: {
     flexDirection: 'row',
@@ -348,15 +361,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#34C759',
   },
-  infoCard: {
-    backgroundColor: '#fff',
+  infoCardWrapper: {
     borderRadius: 16,
+    overflow: 'hidden',
+  },
+  infoCard: {
+    backgroundColor: 'transparent',
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
   },
   infoHeader: {
     flexDirection: 'row',
