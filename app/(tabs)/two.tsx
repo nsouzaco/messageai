@@ -83,7 +83,7 @@ export default function SettingsScreen() {
     >
       <ScrollView style={styles.scrollContent}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>Profile</Text>
       </View>
 
       <View style={styles.profileSectionWrapper}>
