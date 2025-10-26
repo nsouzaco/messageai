@@ -86,16 +86,20 @@ export default function AIHubScreen() {
     >
       <ScrollView showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.sparkleIcon}>
-            <Ionicons name="sparkles" size={32} color="#007AFF" />
+      <View style={styles.headerWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.glassCard}>
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <View style={styles.sparkleIcon}>
+                <Ionicons name="sparkles" size={32} color="#007AFF" />
+              </View>
+              <Text style={styles.headerTitle}>AI Assistant</Text>
+              <Text style={styles.headerSubtitle}>
+                Powered by OpenAI • Smart features for your team
+              </Text>
+            </View>
           </View>
-          <Text style={styles.headerTitle}>AI Assistant</Text>
-          <Text style={styles.headerSubtitle}>
-            Powered by OpenAI • Smart features for your team
-          </Text>
-        </View>
+        </BlurView>
       </View>
 
       {/* Main Features */}
@@ -210,13 +214,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerWrapper: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     paddingTop: 60,
     paddingBottom: 24,
     paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
   },
   headerContent: {
     alignItems: 'center',
