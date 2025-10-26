@@ -278,9 +278,11 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 12,
     overflow: 'hidden',
+    height: 48,
   },
   searchInputGlass: {
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.7)',
   },
@@ -294,7 +296,6 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 12,
     fontSize: 16,
     color: '#000',
   },
@@ -302,9 +303,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     borderRadius: 12,
     paddingHorizontal: 16,
+    paddingVertical: 12,
     justifyContent: 'center',
     alignItems: 'center',
     minWidth: 56,
+    minHeight: 48,
   },
   searchButtonDisabled: {
     opacity: 0.5,
