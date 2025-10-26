@@ -123,41 +123,54 @@ export default function MessageBubble({
     }
   };
 
+  // Only show priority badge for high and medium priority (not low/green)
+  const shouldShowPriority = message.aiPriority && (message.aiPriority === 'high' || message.aiPriority === 'medium');
+
   return (
     <View style={[styles.container, isOwnMessage ? styles.ownMessage : styles.otherMessage]}>
       {showSenderName && !isOwnMessage && senderName && (
         <Text style={styles.senderName}>{senderName}</Text>
       )}
       
-      {/* Priority Badge - shown above message */}
-      {message.aiPriority && (
-        <View style={[styles.priorityContainer, isOwnMessage ? styles.priorityRight : styles.priorityLeft]}>
-          <PriorityBadge priority={message.aiPriority} score={message.priorityScore} />
-        </View>
-      )}
-      
-      <TouchableOpacity
-        onLongPress={handleLongPress}
-        delayLongPress={500}
-        activeOpacity={0.7}
-      >
-        <View
-          style={[
-            styles.bubble,
-            isOwnMessage ? styles.ownBubble : styles.otherBubble,
-          ]}
-        >
-          <Text style={[styles.text, isOwnMessage ? styles.ownText : styles.otherText]}>
-            {message.text}
-          </Text>
-          <View style={styles.footer}>
-            <Text style={[styles.time, isOwnMessage ? styles.ownTime : styles.otherTime]}>
-              {formatMessageTime(message.timestamp)}
-            </Text>
-            {getStatusIcon()}
+      {/* Row container for badge and message */}
+      <View style={styles.messageWithBadge}>
+        {/* Priority Badge - left side for other's messages */}
+        {shouldShowPriority && !isOwnMessage && (
+          <View style={styles.badgeLeft}>
+            <PriorityBadge priority={message.aiPriority!} score={message.priorityScore} showLabel={false} />
           </View>
-        </View>
-      </TouchableOpacity>
+        )}
+        
+        <TouchableOpacity
+          onLongPress={handleLongPress}
+          delayLongPress={500}
+          activeOpacity={0.7}
+        >
+          <View
+            style={[
+              styles.bubble,
+              isOwnMessage ? styles.ownBubble : styles.otherBubble,
+            ]}
+          >
+            <Text style={[styles.text, isOwnMessage ? styles.ownText : styles.otherText]}>
+              {message.text}
+            </Text>
+            <View style={styles.footer}>
+              <Text style={[styles.time, isOwnMessage ? styles.ownTime : styles.otherTime]}>
+                {formatMessageTime(message.timestamp)}
+              </Text>
+              {getStatusIcon()}
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        {/* Priority Badge - right side for own messages */}
+        {shouldShowPriority && isOwnMessage && (
+          <View style={styles.badgeRight}>
+            <PriorityBadge priority={message.aiPriority!} score={message.priorityScore} showLabel={false} />
+          </View>
+        )}
+      </View>
       
       {/* Thread indicator */}
       {isGroupChat && hasReplies && (
@@ -247,16 +260,16 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: '500',
   },
-  priorityContainer: {
-    marginBottom: 4,
+  messageWithBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  priorityRight: {
-    alignSelf: 'flex-end',
-    marginRight: 12,
+  badgeLeft: {
+    // Priority badge on the left side
   },
-  priorityLeft: {
-    alignSelf: 'flex-start',
-    marginLeft: 12,
+  badgeRight: {
+    // Priority badge on the right side
   },
 });
 
