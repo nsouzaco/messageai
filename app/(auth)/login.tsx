@@ -2,6 +2,8 @@ import Logo from '@/components/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAuthErrorMessage } from '@/utils/errorMessages';
 import { isValidEmail } from '@/utils/helpers';
+import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -69,29 +71,41 @@ export default function LoginScreen() {
         <Text style={styles.subtitle}>Sign in to continue</Text>
 
         <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="#999"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoCorrect={false}
-            editable={!loading}
-          />
+          <BlurView
+            intensity={20}
+            tint="light"
+            style={styles.inputGlass}
+          >
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#999"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoCorrect={false}
+              editable={!loading}
+            />
+          </BlurView>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#999"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            editable={!loading}
-          />
+          <BlurView
+            intensity={20}
+            tint="light"
+            style={styles.inputGlass}
+          >
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#999"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!loading}
+            />
+          </BlurView>
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
@@ -101,7 +115,10 @@ export default function LoginScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
+              <>
+                <Text style={styles.buttonText}>Sign In</Text>
+                <Ionicons name="arrow-forward" size={20} color="#fff" />
+              </>
             )}
           </TouchableOpacity>
 
@@ -146,22 +163,31 @@ const styles = StyleSheet.create({
   form: {
     width: '100%',
   },
-  input: {
-    backgroundColor: '#f5f5f5',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
-    fontSize: 16,
+  inputGlass: {
+    borderRadius: 16,
     marginBottom: 16,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: 'rgba(255, 255, 255, 0.6)',
+  },
+  input: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: '#000',
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingVertical: 16,
-    borderRadius: 12,
+    paddingHorizontal: 24,
+    borderRadius: 30,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 8,
+    gap: 12,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -180,7 +206,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   linkTextBold: {
-    color: '#007AFF',
+    color: '#9333EA',
     fontWeight: '600',
   },
 });
