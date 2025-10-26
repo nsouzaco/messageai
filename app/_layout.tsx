@@ -10,7 +10,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/components/useColorScheme';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ChatProvider } from '@/contexts/ChatContext';
-import { requestNotificationPermissions } from '@/services/firebase/notifications';
+import { getExpoPushToken, requestNotificationPermissions } from '@/services/firebase/notifications';
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -57,16 +57,40 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user, updatePushToken } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
-  // Request notification permissions
+  // Request notification permissions and register push token
   useEffect(() => {
-    if (isAuthenticated) {
-      requestNotificationPermissions();
-    }
-  }, [isAuthenticated]);
+    const registerPushToken = async () => {
+      if (!isAuthenticated || !user) {
+        console.log('⏭️ Skipping push token registration - not authenticated');
+        return;
+      }
+
+      console.log('🚀 Starting push notification registration...');
+
+      // Request permissions
+      const hasPermission = await requestNotificationPermissions();
+      if (!hasPermission) {
+        console.log('⚠️ Notification permissions denied or unavailable');
+        return;
+      }
+
+      // Get push token
+      const token = await getExpoPushToken();
+      if (token) {
+        // Save token to user profile
+        await updatePushToken(token);
+        console.log('🎉 Push notification setup complete!');
+      } else {
+        console.log('⚠️ Failed to get push token');
+      }
+    };
+
+    registerPushToken();
+  }, [isAuthenticated, user]);
 
   // Handle notifications
   useEffect(() => {
@@ -75,17 +99,20 @@ function RootLayoutNav() {
 
     // Listen to notifications received while app is foregrounded
     notifListener = Notifications.addNotificationReceivedListener(notification => {
-      console.log('Notification received:', notification);
+      console.log('📬 Notification received in foreground:', notification.request.content);
     });
 
     // Listen to notification taps
     respListener = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('Notification tapped:', response);
+      console.log('👆 Notification tapped:', response.notification.request.content);
       
       // Navigate to the conversation if conversationId is provided
       const conversationId = response.notification.request.content.data?.conversationId;
       if (conversationId && typeof conversationId === 'string') {
+        console.log('🧭 Navigating to conversation:', conversationId);
         router.push(`/chat/${conversationId}`);
+      } else {
+        console.log('⚠️ No conversationId in notification data');
       }
     });
 

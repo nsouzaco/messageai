@@ -41,7 +41,6 @@ export const registerUser = async (
 
     return user;
   } catch (error: any) {
-    console.error('Error registering user:', error);
     throw new Error(error.message || 'Failed to register user');
   }
 };
@@ -63,7 +62,6 @@ export const loginUser = async (email: string, password: string): Promise<User> 
 
     return userDoc.data() as User;
   } catch (error: any) {
-    console.error('Error logging in:', error);
     throw new Error(error.message || 'Failed to login');
   }
 };
@@ -75,7 +73,6 @@ export const logoutUser = async (): Promise<void> => {
   try {
     await signOut(auth);
   } catch (error: any) {
-    console.error('Error logging out:', error);
     throw new Error(error.message || 'Failed to logout');
   }
 };
@@ -93,7 +90,6 @@ export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User |
 
     return userDoc.data() as User;
   } catch (error) {
-    console.error('Error getting current user:', error);
     return null;
   }
 };
@@ -113,8 +109,25 @@ export const updateUserProfile = async (
       await updateProfile(auth.currentUser, { displayName: updates.displayName });
     }
   } catch (error: any) {
-    console.error('Error updating user profile:', error);
     throw new Error(error.message || 'Failed to update profile');
+  }
+};
+
+/**
+ * Update user push token
+ */
+export const updateUserPushToken = async (
+  userId: string,
+  pushToken: string
+): Promise<void> => {
+  try {
+    await setDoc(
+      doc(firestore, 'users', userId),
+      { pushToken, notificationsEnabled: true },
+      { merge: true }
+    );
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to update push token');
   }
 };
 

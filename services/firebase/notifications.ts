@@ -19,26 +19,30 @@ Notifications.setNotificationHandler({
 export const requestNotificationPermissions = async (): Promise<boolean> => {
   try {
     if (!Device.isDevice) {
-      console.log('Must use physical device for push notifications');
+      console.log('⚠️ Must use physical device for push notifications');
       return false;
     }
 
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    console.log('📱 Current notification permission:', existingStatus);
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted') {
+      console.log('🔔 Requesting notification permissions...');
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
+      console.log('🔔 Permission result:', status);
     }
 
     if (finalStatus !== 'granted') {
-      console.log('Failed to get push notification permissions');
+      console.log('❌ Failed to get push notification permissions');
       return false;
     }
 
+    console.log('✅ Notification permissions granted');
     return true;
   } catch (error) {
-    console.error('Error requesting notification permissions:', error);
+    console.error('❌ Error requesting notification permissions:', error);
     return false;
   }
 };
@@ -49,18 +53,21 @@ export const requestNotificationPermissions = async (): Promise<boolean> => {
 export const getExpoPushToken = async (): Promise<string | null> => {
   try {
     if (!Device.isDevice) {
+      console.log('⚠️ Not a physical device, skipping push token');
       return null;
     }
 
     const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    console.log('📲 Getting Expo push token for project:', projectId);
     
     const token = await Notifications.getExpoPushTokenAsync({
       projectId,
     });
 
+    console.log('✅ Push token obtained:', token.data.substring(0, 30) + '...');
     return token.data;
   } catch (error) {
-    console.error('Error getting push token:', error);
+    console.error('❌ Error getting push token:', error);
     return null;
   }
 };

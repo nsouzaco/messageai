@@ -26,6 +26,8 @@ export interface User {
   onlineStatus: OnlineStatus;
   lastSeen?: number;
   createdAt: number;
+  pushToken?: string; // Expo push notification token
+  notificationsEnabled?: boolean; // User preference for notifications
 }
 
 // Message Type Enum

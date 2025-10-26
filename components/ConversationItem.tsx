@@ -1,10 +1,11 @@
-import { Conversation, ConversationType } from '@/types';
+import { Conversation, ConversationType, OnlineStatus } from '@/types';
 import { formatConversationTime, getInitials, truncateText } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CachedImage from './CachedImage';
+import PresenceIndicator from './PresenceIndicator';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -41,6 +42,18 @@ const ConversationItem = React.memo(function ConversationItem({
     return otherUser?.profilePicture;
   };
 
+  const getOtherUserOnlineStatus = () => {
+    // Only show online status for one-on-one chats
+    if (conversation.type !== ConversationType.ONE_ON_ONE) {
+      return null;
+    }
+
+    const otherUser = conversation.participantDetails?.find(
+      (user) => user.id !== currentUserId
+    );
+    return otherUser?.onlineStatus || null;
+  };
+
   const getUnreadCount = () => {
     return conversation.unreadCount[currentUserId] || 0;
   };
@@ -48,6 +61,7 @@ const ConversationItem = React.memo(function ConversationItem({
   const name = getConversationName();
   const imageUrl = getConversationImage();
   const unreadCount = getUnreadCount();
+  const otherUserStatus = getOtherUserOnlineStatus();
   const lastMessageText = conversation.lastMessage?.text || 'No messages yet';
   const lastMessageTime = conversation.lastMessage?.timestamp || conversation.createdAt;
 
@@ -65,6 +79,11 @@ const ConversationItem = React.memo(function ConversationItem({
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarText}>{getInitials(name)}</Text>
+              </View>
+            )}
+            {otherUserStatus === OnlineStatus.ONLINE && (
+              <View style={styles.presenceIndicator}>
+                <PresenceIndicator status={OnlineStatus.ONLINE} size={12} />
               </View>
             )}
           </View>
@@ -114,12 +133,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   avatarContainer: {
+    position: 'relative',
     marginRight: 12,
   },
   avatar: {
     width: 56,
     height: 56,
     borderRadius: 28,
+  },
+  presenceIndicator: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
   },
   avatarPlaceholder: {
     width: 56,

@@ -6,6 +6,7 @@ import {
     logoutUser as firebaseLogout,
     registerUser as firebaseRegister,
     updateUserProfile as firebaseUpdateProfile,
+    updateUserPushToken as firebaseUpdatePushToken,
     getCurrentUser,
     onAuthStateChange,
 } from '../services/firebase/auth';
@@ -69,6 +70,7 @@ interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
+  updatePushToken: (pushToken: string) => Promise<void>;
 }
 
 // Create context
@@ -114,7 +116,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             dispatch({ type: 'AUTH_LOGOUT' });
           }
         } catch (error) {
-          console.error('Error getting current user:', error);
           dispatch({ type: 'AUTH_LOGOUT' });
         }
       } else {
@@ -183,12 +184,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Update push token function
+  const updatePushToken = async (pushToken: string) => {
+    try {
+      if (!state.user) throw new Error('No user logged in');
+      
+      console.log('💾 Saving push token to Firestore for user:', state.user.id);
+      await firebaseUpdatePushToken(state.user.id, pushToken);
+      console.log('✅ Push token saved successfully');
+      dispatch({ type: 'UPDATE_USER', payload: { pushToken, notificationsEnabled: true } });
+    } catch (error: any) {
+      // Silently fail - push token update is not critical
+      console.log('❌ Failed to update push token:', error.message);
+    }
+  };
+
   const value: AuthContextType = {
     ...state,
     register,
     login,
     logout,
     updateProfile,
+    updatePushToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

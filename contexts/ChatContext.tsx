@@ -8,6 +8,7 @@ import {
     listenToMessages,
     listenToThreadReplies,
 } from '../services/firebase/firestore';
+import { setBadgeCount } from '../services/firebase/notifications';
 import { ChatState, Conversation, DeliveryStatus, Message, MessageType } from '../types';
 import { generateTempId } from '../utils/helpers';
 import { useAuth } from './AuthContext';
@@ -196,6 +197,20 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       }
     };
   }, [user, isAuthenticated]);
+
+  // Update badge count based on unread messages
+  useEffect(() => {
+    if (!user) return;
+
+    // Calculate total unread count across all conversations
+    const totalUnread = state.conversations.reduce((total, conversation) => {
+      const unreadForUser = conversation.unreadCount?.[user.id] || 0;
+      return total + unreadForUser;
+    }, 0);
+
+    // Update app badge
+    setBadgeCount(totalUnread);
+  }, [state.conversations, user]);
 
   // Listen to messages for active conversation
   useEffect(() => {

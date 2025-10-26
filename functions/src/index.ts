@@ -18,6 +18,9 @@ export { semanticSearch } from './features/semanticSearch';
 export { summarizeThread } from './features/summarizeThread';
 export { testPinecone } from './features/testPinecone';
 
+// Export push notification functions
+export { sendCustomNotification, sendMessageNotification } from './features/sendPushNotification';
+
 // Utility functions for maintenance
 import * as functions from 'firebase-functions';
 import { clearExpiredCache } from './ai/cache';
