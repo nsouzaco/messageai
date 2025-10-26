@@ -55,18 +55,18 @@ export default function MessageBubble({
 
     switch (message.deliveryStatus) {
       case DeliveryStatus.SENDING:
-        return <Ionicons name="time-outline" size={14} color="#999" />; // Clock while sending
+        return <Ionicons name="time-outline" size={14} color="rgba(255, 255, 255, 0.8)" />; // Clock while sending
       case DeliveryStatus.SENT:
       case DeliveryStatus.DELIVERED:
-        // Show single gray tick if not fully read
+        // Show single white tick if not fully read
         if (!fullyRead) {
-          return <Ionicons name="checkmark" size={14} color="#999" />;
+          return <Ionicons name="checkmark" size={14} color="rgba(255, 255, 255, 0.8)" />;
         }
-        // Show double gray ticks if fully read
-        return <Ionicons name="checkmark-done" size={14} color="#999" />;
+        // Show double white ticks if fully read
+        return <Ionicons name="checkmark-done" size={14} color="rgba(255, 255, 255, 0.8)" />;
       case DeliveryStatus.READ:
-        // Double gray ticks when read
-        return <Ionicons name="checkmark-done" size={14} color="#999" />;
+        // Double white ticks when read
+        return <Ionicons name="checkmark-done" size={14} color="rgba(255, 255, 255, 0.8)" />;
       default:
         return null;
     }
