@@ -1,6 +1,7 @@
 import { Conversation, ConversationType } from '@/types';
 import { formatConversationTime, getInitials, truncateText } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CachedImage from './CachedImage';
@@ -51,53 +52,66 @@ const ConversationItem = React.memo(function ConversationItem({
   const lastMessageTime = conversation.lastMessage?.timestamp || conversation.createdAt;
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
-      <View style={styles.avatarContainer}>
-        {imageUrl ? (
-          <CachedImage uri={imageUrl} style={styles.avatar} borderRadius={28} />
-        ) : conversation.type === ConversationType.GROUP ? (
-          <View style={[styles.avatarPlaceholder, styles.groupAvatarPlaceholder]}>
-            <Ionicons name="people" size={28} color="#007AFF" />
+    <View style={styles.wrapper}>
+      <BlurView intensity={30} tint="light" style={styles.glassContainer}>
+        <TouchableOpacity style={styles.container} onPress={onPress}>
+          <View style={styles.avatarContainer}>
+            {imageUrl ? (
+              <CachedImage uri={imageUrl} style={styles.avatar} borderRadius={28} />
+            ) : conversation.type === ConversationType.GROUP ? (
+              <View style={[styles.avatarPlaceholder, styles.groupAvatarPlaceholder]}>
+                <Ionicons name="people" size={28} color="#007AFF" />
+              </View>
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarText}>{getInitials(name)}</Text>
+              </View>
+            )}
           </View>
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarText}>{getInitials(name)}</Text>
-          </View>
-        )}
-      </View>
 
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.name} numberOfLines={1}>
-            {name}
-          </Text>
-          <Text style={styles.time}>{formatConversationTime(lastMessageTime)}</Text>
-        </View>
-
-        <View style={styles.messageRow}>
-          <Text style={[styles.lastMessage, unreadCount > 0 && styles.unreadText]} numberOfLines={1}>
-            {truncateText(lastMessageText, 40)}
-          </Text>
-          {unreadCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <Text style={styles.name} numberOfLines={1}>
+                {name}
+              </Text>
+              <Text style={styles.time}>{formatConversationTime(lastMessageTime)}</Text>
             </View>
-          )}
-        </View>
-      </View>
-    </TouchableOpacity>
+
+            <View style={styles.messageRow}>
+              <Text style={[styles.lastMessage, unreadCount > 0 && styles.unreadText]} numberOfLines={1}>
+                {truncateText(lastMessageText, 40)}
+              </Text>
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </BlurView>
+    </View>
   );
 });
 
 export default ConversationItem;
 
 const styles = StyleSheet.create({
+  wrapper: {
+    marginHorizontal: 12,
+    marginVertical: 6,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  glassContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+  },
   container: {
     flexDirection: 'row',
     padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    backgroundColor: 'transparent',
   },
   avatarContainer: {
     marginRight: 12,

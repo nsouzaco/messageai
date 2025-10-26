@@ -90,11 +90,12 @@ export default function ChatListScreen() {
         data={conversations}
         renderItem={renderConversation}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={conversations.length === 0 ? styles.emptyList : undefined}
+        contentContainerStyle={conversations.length === 0 ? styles.emptyList : styles.listContent}
         ListEmptyComponent={renderEmpty}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        showsVerticalScrollIndicator={false}
       />
 
       <TouchableOpacity style={styles.fab} onPress={handleNewChat}>
@@ -115,9 +116,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 60,
     paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+  },
+  listContent: {
+    paddingTop: 12,
+    paddingBottom: 100,
   },
   headerTitle: {
     fontSize: 32,
