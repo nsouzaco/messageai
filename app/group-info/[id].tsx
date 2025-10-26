@@ -6,7 +6,9 @@ import { uploadGroupPicture } from '@/services/firebase/storage';
 import { ConversationType, OnlineStatus } from '@/types';
 import { getInitials } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { doc, getFirestore, updateDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
@@ -90,9 +92,26 @@ export default function GroupInfoScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <LinearGradient
+      colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
+      style={styles.container}
+    >
+      {/* Header with Glass Effect */}
+      <BlurView intensity={80} tint="light" style={styles.modalHeaderBlur}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+            <Ionicons name="close" size={28} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.modalHeaderTitle}>Group Info</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+      </BlurView>
+
+      <ScrollView style={styles.scrollView}>
       {/* Group Name Section */}
-      <View style={styles.groupSection}>
+      <View style={styles.groupSectionWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.glassCard}>
+          <View style={styles.groupSection}>
         <TouchableOpacity 
           style={styles.groupIconContainer}
           onPress={handleChangeGroupPicture}
@@ -122,13 +141,22 @@ export default function GroupInfoScreen() {
           {participants.length} {participants.length === 1 ? 'member' : 'members'}
         </Text>
         <Text style={styles.changePhotoHint}>Tap to change group picture</Text>
+          </View>
+        </BlurView>
       </View>
 
       {/* Participants Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          {participants.length} {participants.length === 1 ? 'Participant' : 'Participants'}
-        </Text>
+      <View style={styles.sectionTitleWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.sectionTitleGlass}>
+          <Text style={styles.sectionTitle}>
+            {participants.length} {participants.length === 1 ? 'Participant' : 'Participants'}
+          </Text>
+        </BlurView>
+      </View>
+      
+      <View style={styles.sectionWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.glassCard}>
+          <View style={styles.section}>
         
         {participants.map((participant) => {
           const isCurrentUser = participant.id === user?.id;
@@ -174,25 +202,63 @@ export default function GroupInfoScreen() {
             </View>
           );
         })}
+          </View>
+        </BlurView>
       </View>
 
       {/* Group Actions Section */}
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.actionItem}>
-          <Ionicons name="exit-outline" size={24} color="#FF3B30" />
-          <Text style={[styles.actionText, styles.actionTextDanger]}>
-            Leave Group
-          </Text>
-        </TouchableOpacity>
+      <View style={styles.actionButtonWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.actionButtonGlass}>
+          <TouchableOpacity style={styles.leaveGroupButton}>
+            <Text style={styles.leaveGroupButtonText}>Leave Group</Text>
+            <Ionicons name="arrow-forward" size={20} color="#fff" />
+          </TouchableOpacity>
+        </BlurView>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+  },
+  modalHeaderBlur: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 60,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: 'transparent',
+  },
+  modalHeaderTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#000',
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  scrollView: {
+    flex: 1,
+    paddingTop: 120,
   },
   loadingContainer: {
     flex: 1,
@@ -200,12 +266,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f9f9f9',
   },
+  groupSectionWrapper: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  sectionWrapper: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  glassCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+  },
   groupSection: {
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     alignItems: 'center',
     paddingVertical: 32,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   groupIconContainer: {
     marginBottom: 16,
@@ -253,9 +335,20 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   section: {
-    backgroundColor: '#fff',
-    marginTop: 20,
+    backgroundColor: 'transparent',
     paddingVertical: 8,
+  },
+  sectionTitleWrapper: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    marginTop: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  sectionTitleGlass: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
   },
   sectionTitle: {
     fontSize: 13,
@@ -264,7 +357,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'transparent',
   },
   participantItem: {
     flexDirection: 'row',
@@ -327,19 +420,34 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
-  actionItem: {
+  actionButtonWrapper: {
+    marginHorizontal: 'auto',
+    marginTop: 8,
+    marginBottom: 24,
+    borderRadius: 30,
+    overflow: 'hidden',
+    width: '70%',
+    alignSelf: 'center',
+  },
+  actionButtonGlass: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  leaveGroupButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    justifyContent: 'center',
+    backgroundColor: '#FF3B30',
     paddingVertical: 16,
-    gap: 12,
+    paddingHorizontal: 24,
+    borderRadius: 30,
+    gap: 8,
   },
-  actionText: {
+  leaveGroupButtonText: {
+    color: '#fff',
     fontSize: 16,
-    color: '#000',
-  },
-  actionTextDanger: {
-    color: '#FF3B30',
+    fontWeight: '600',
   },
 });
 
