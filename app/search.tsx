@@ -111,7 +111,7 @@ export default function SearchScreen() {
     if (!searched) {
       return (
         <View style={styles.emptyContainer}>
-          <Ionicons name="search-outline" size={64} color="#ccc" />
+          <Ionicons name="search-outline" size={64} color="#000" />
           <Text style={styles.emptyText}>Smart Search</Text>
           <Text style={styles.emptySubtext}>
             Search messages using natural language{'\n'}
@@ -123,7 +123,7 @@ export default function SearchScreen() {
 
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="search-outline" size={64} color="#ccc" />
+        <Ionicons name="search-outline" size={64} color="#000" />
         <Text style={styles.emptyText}>No results found</Text>
         <Text style={styles.emptySubtext}>
           Try a different search query
@@ -148,23 +148,27 @@ export default function SearchScreen() {
         </View>
 
         <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
-            <Ionicons name="search" size={20} color="#999" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Ask a question or describe what you're looking for..."
-              value={query}
-              onChangeText={setQuery}
-              onSubmitEditing={handleSearch}
-              returnKeyType="search"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            {query.length > 0 && (
-              <TouchableOpacity onPress={() => setQuery('')}>
-                <Ionicons name="close-circle" size={20} color="#999" />
-              </TouchableOpacity>
-            )}
+          <View style={styles.searchInputWrapper}>
+            <BlurView intensity={30} tint="light" style={styles.searchInputGlass}>
+              <View style={styles.searchInputContainer}>
+                <Ionicons name="search" size={20} color="#999" />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Ask a question or describe what you're looking for..."
+                  value={query}
+                  onChangeText={setQuery}
+                  onSubmitEditing={handleSearch}
+                  returnKeyType="search"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {query.length > 0 && (
+                  <TouchableOpacity onPress={() => setQuery('')}>
+                    <Ionicons name="close-circle" size={20} color="#999" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </BlurView>
           </View>
           <TouchableOpacity
             style={[styles.searchButton, !query.trim() && styles.searchButtonDisabled]}
@@ -182,18 +186,26 @@ export default function SearchScreen() {
         <View style={styles.examplesContainer}>
           <Text style={styles.examplesLabel}>Try:</Text>
           <View style={styles.examplesRow}>
-            <TouchableOpacity
-              style={styles.exampleChip}
-              onPress={() => setQuery('Where did we discuss the API refactor?')}
-            >
-              <Text style={styles.exampleChipText}>API refactor</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.exampleChip}
-              onPress={() => setQuery('What decisions did we make about the database?')}
-            >
-              <Text style={styles.exampleChipText}>Database decisions</Text>
-            </TouchableOpacity>
+            <View style={styles.exampleChipWrapper}>
+              <BlurView intensity={30} tint="light" style={styles.exampleChipGlass}>
+                <TouchableOpacity
+                  style={styles.exampleChip}
+                  onPress={() => setQuery('Where did we discuss the API refactor?')}
+                >
+                  <Text style={styles.exampleChipText}>API refactor</Text>
+                </TouchableOpacity>
+              </BlurView>
+            </View>
+            <View style={styles.exampleChipWrapper}>
+              <BlurView intensity={30} tint="light" style={styles.exampleChipGlass}>
+                <TouchableOpacity
+                  style={styles.exampleChip}
+                  onPress={() => setQuery('What decisions did we make about the database?')}
+                >
+                  <Text style={styles.exampleChipText}>Database decisions</Text>
+                </TouchableOpacity>
+              </BlurView>
+            </View>
           </View>
         </View>
           </View>
@@ -262,12 +274,21 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
+  searchInputWrapper: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  searchInputGlass: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+  },
   searchInputContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
+    backgroundColor: 'transparent',
     paddingHorizontal: 12,
     gap: 8,
   },
@@ -301,13 +322,19 @@ const styles = StyleSheet.create({
     gap: 8,
     flexWrap: 'wrap',
   },
+  exampleChipWrapper: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  exampleChipGlass: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+  },
   exampleChip: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'transparent',
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   exampleChipText: {
     fontSize: 13,
@@ -328,12 +355,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#999',
+    color: '#000',
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 15,
-    color: '#ccc',
+    color: '#000',
     marginTop: 8,
     textAlign: 'center',
     lineHeight: 22,
