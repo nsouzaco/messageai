@@ -38,6 +38,41 @@ export const uploadProfilePicture = async (
 };
 
 /**
+ * Upload group picture to Firebase Storage
+ */
+export const uploadGroupPicture = async (
+  conversationId: string,
+  imageUri: string
+): Promise<string> => {
+  try {
+    // Resize image to reduce file size
+    const manipulatedImage = await ImageManipulator.manipulateAsync(
+      imageUri,
+      [{ resize: { width: 400, height: 400 } }],
+      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+    );
+
+    // Convert to blob
+    const response = await fetch(manipulatedImage.uri);
+    const blob = await response.blob();
+
+    // Upload to Firebase Storage
+    const filename = `group_pictures/${conversationId}_${Date.now()}.jpg`;
+    const storageRef = ref(storage, filename);
+    
+    await uploadBytes(storageRef, blob);
+
+    // Get download URL
+    const downloadURL = await getDownloadURL(storageRef);
+    
+    return downloadURL;
+  } catch (error: any) {
+    console.error('Error uploading group picture:', error);
+    throw new Error(error.message || 'Failed to upload group picture');
+  }
+};
+
+/**
  * Delete profile picture from Firebase Storage
  */
 export const deleteProfilePicture = async (imageUrl: string): Promise<void> => {

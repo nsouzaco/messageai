@@ -4,11 +4,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useChat } from '@/contexts/ChatContext';
 import { ConversationType, OnlineStatus } from '@/types';
 import { getInitials } from '@/utils/helpers';
+import { uploadGroupPicture } from '@/services/firebase/storage';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import { doc, getFirestore, updateDoc } from 'firebase/firestore';
+import React, { useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     ScrollView,
     StyleSheet,
     Text,
@@ -22,6 +26,7 @@ export default function GroupInfoScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { conversations } = useChat();
+  const [uploading, setUploading] = useState(false);
 
   const conversation = conversations.find((c) => c.id === conversationId);
 
@@ -40,20 +45,83 @@ export default function GroupInfoScreen() {
 
   const participants = conversation.participantDetails || [];
   const groupName = conversation.name || 'Group Chat';
+  const groupPicture = conversation.groupPicture;
+
+  const handleChangeGroupPicture = async () => {
+    try {
+      // Request permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant access to your photos to change the group picture.');
+        return;
+      }
+
+      // Pick image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled) return;
+
+      setUploading(true);
+
+      // Upload to Firebase Storage
+      const imageUri = result.assets[0].uri;
+      const downloadURL = await uploadGroupPicture(conversationId, imageUri);
+
+      // Update conversation in Firestore
+      const firestore = getFirestore();
+      const conversationRef = doc(firestore, 'conversations', conversationId);
+      await updateDoc(conversationRef, {
+        groupPicture: downloadURL,
+      });
+
+      Alert.alert('Success', 'Group picture updated!');
+    } catch (error: any) {
+      console.error('Error updating group picture:', error);
+      Alert.alert('Error', error.message || 'Failed to update group picture');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.container}>
       {/* Group Name Section */}
       <View style={styles.groupSection}>
-        <View style={styles.groupIconContainer}>
-          <View style={styles.groupIcon}>
-            <Ionicons name="people" size={40} color="#007AFF" />
+        <TouchableOpacity 
+          style={styles.groupIconContainer}
+          onPress={handleChangeGroupPicture}
+          disabled={uploading}
+        >
+          {groupPicture ? (
+            <CachedImage
+              uri={groupPicture}
+              style={styles.groupPictureImage}
+              borderRadius={50}
+            />
+          ) : (
+            <View style={styles.groupIcon}>
+              <Ionicons name="people" size={40} color="#007AFF" />
+            </View>
+          )}
+          <View style={styles.editIconContainer}>
+            {uploading ? (
+              <ActivityIndicator size="small" color="#007AFF" />
+            ) : (
+              <Ionicons name="camera" size={18} color="#fff" />
+            )}
           </View>
-        </View>
+        </TouchableOpacity>
         <Text style={styles.groupName}>{groupName}</Text>
         <Text style={styles.groupSubtitle}>
           {participants.length} {participants.length === 1 ? 'member' : 'members'}
         </Text>
+        <Text style={styles.changePhotoHint}>Tap to change group picture</Text>
       </View>
 
       {/* Participants Section */}
@@ -141,6 +209,7 @@ const styles = StyleSheet.create({
   },
   groupIconContainer: {
     marginBottom: 16,
+    position: 'relative',
   },
   groupIcon: {
     width: 100,
@@ -149,6 +218,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#E3F2FD',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  groupPictureImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  editIconContainer: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  changePhotoHint: {
+    fontSize: 13,
+    color: '#999',
+    marginTop: 8,
   },
   groupName: {
     fontSize: 24,

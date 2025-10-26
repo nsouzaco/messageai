@@ -53,6 +53,7 @@ export interface Conversation {
   participants: string[];
   participantDetails?: User[]; // Populated on client side
   name?: string; // For group chats
+  groupPicture?: string; // For group chats
   lastMessage?: {
     text: string;
     senderId: string;

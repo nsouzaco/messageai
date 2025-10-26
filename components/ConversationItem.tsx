@@ -1,5 +1,6 @@
 import { Conversation, ConversationType } from '@/types';
 import { formatConversationTime, getInitials, truncateText } from '@/utils/helpers';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CachedImage from './CachedImage';
@@ -30,7 +31,7 @@ const ConversationItem = React.memo(function ConversationItem({
 
   const getConversationImage = () => {
     if (conversation.type === ConversationType.GROUP) {
-      return null; // Could show group icon
+      return conversation.groupPicture || null;
     }
 
     const otherUser = conversation.participantDetails?.find(
@@ -54,6 +55,10 @@ const ConversationItem = React.memo(function ConversationItem({
       <View style={styles.avatarContainer}>
         {imageUrl ? (
           <CachedImage uri={imageUrl} style={styles.avatar} borderRadius={28} />
+        ) : conversation.type === ConversationType.GROUP ? (
+          <View style={[styles.avatarPlaceholder, styles.groupAvatarPlaceholder]}>
+            <Ionicons name="people" size={28} color="#007AFF" />
+          </View>
         ) : (
           <View style={styles.avatarPlaceholder}>
             <Text style={styles.avatarText}>{getInitials(name)}</Text>
@@ -109,6 +114,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  groupAvatarPlaceholder: {
+    backgroundColor: '#E3F2FD',
   },
   avatarText: {
     color: '#fff',
