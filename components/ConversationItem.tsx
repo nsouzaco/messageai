@@ -99,14 +99,14 @@ export default ConversationItem;
 const styles = StyleSheet.create({
   wrapper: {
     marginHorizontal: 12,
-    marginVertical: 6,
+    marginVertical: 1,
     borderRadius: 16,
     overflow: 'hidden',
   },
   glassContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   container: {
     flexDirection: 'row',
