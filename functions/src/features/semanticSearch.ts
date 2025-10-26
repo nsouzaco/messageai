@@ -53,7 +53,7 @@ export const semanticSearch = functions.https.onCall(
       }
 
       const userId = context.auth.uid;
-      const { query, conversationId, topK = 10, minScore = 0.7 } = data;
+      const { query, conversationId, topK = 30, minScore = 0.1 } = data;
 
       logInfo('Semantic search requested', {
         userId,
@@ -72,14 +72,22 @@ export const semanticSearch = functions.https.onCall(
       // Check rate limit
       await checkRateLimit(userId, 'semanticSearch', RATE_LIMITS.SEMANTIC_SEARCH);
 
-      // Search in Pinecone
+      // Search in Pinecone - let the AI embeddings handle semantic understanding
       const searchResults = await searchMessages(query, {
         conversationId,
         topK,
         minScore,
       });
 
+      logInfo('Pinecone search results', {
+        userId,
+        query,
+        resultCount: searchResults.length,
+        topScores: searchResults.slice(0, 3).map(r => r.score),
+      });
+
       if (searchResults.length === 0) {
+        logInfo('No search results found', { userId, query, minScore });
         return { results: [], count: 0, query };
       }
 

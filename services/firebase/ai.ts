@@ -116,7 +116,7 @@ export async function extractActionItems(
   conversationId: string,
   threadId?: string,
   messageLimit?: number
-): Promise<ActionItem[]> {
+): Promise<{ actionItems: ActionItem[]; count: number }> {
   try {
     const extractActionItemsFn = httpsCallable<
       { conversationId: string; threadId?: string; messageLimit?: number },
@@ -128,7 +128,7 @@ export async function extractActionItems(
       threadId,
       messageLimit,
     });
-    return result.data.actionItems;
+    return result.data;
   } catch (error: any) {
     console.error('Error extracting action items:', error);
     throw new Error(error.message || 'Failed to extract action items');

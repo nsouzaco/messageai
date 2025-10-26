@@ -58,11 +58,15 @@ export const detectScheduling = functions.https.onCall(
       }
 
       const userId = context.auth.uid;
-      const { conversationId, messageLimit = 10 } = data;
+      const { conversationId, messageLimit } = data;
+      
+      // Ensure messageLimit is a valid integer
+      const limit = messageLimit && typeof messageLimit === 'number' ? messageLimit : 10;
 
       logInfo('Scheduling detection requested', {
         userId,
         conversationId,
+        messageLimit: limit,
       });
 
       // Validate input
@@ -87,7 +91,7 @@ export const detectScheduling = functions.https.onCall(
         .collection('messages')
         .where('threadId', '==', null)
         .orderBy('timestamp', 'desc')
-        .limit(messageLimit)
+        .limit(limit)
         .get();
 
       if (messagesSnapshot.empty) {

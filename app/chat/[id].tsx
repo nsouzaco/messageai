@@ -278,8 +278,10 @@ export default function ChatScreen() {
         inverted={false}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
-        ListFooterComponent={renderFooter}
       />
+
+      {/* Typing Indicator - positioned between messages and input */}
+      {renderFooter()}
 
       {/* Input */}
       <MessageInput

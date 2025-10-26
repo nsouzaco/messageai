@@ -22,12 +22,14 @@ export default function MessageInput({
   disabled = false,
 }: MessageInputProps) {
   const [text, setText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
 
-  // Debounced typing indicator
+  // Debounced typing indicator - stops typing after 3 seconds of inactivity
   const debouncedStopTyping = useCallback(
     debounce(() => {
+      setIsTyping(false);
       onTyping?.(false);
-    }, 2000),
+    }, 3000), // Increased to 3 seconds for smoother experience
     [onTyping]
   );
 
@@ -36,9 +38,16 @@ export default function MessageInput({
 
     if (onTyping) {
       if (newText.length > 0) {
-        onTyping(true);
+        // Only trigger onTyping(true) if not already typing
+        if (!isTyping) {
+          setIsTyping(true);
+          onTyping(true);
+        }
+        // Reset the stop typing timer on each keystroke
         debouncedStopTyping();
       } else {
+        // Immediately stop typing when text is cleared
+        setIsTyping(false);
         onTyping(false);
       }
     }
@@ -50,6 +59,7 @@ export default function MessageInput({
 
     onSend(trimmedText);
     setText('');
+    setIsTyping(false);
     onTyping?.(false);
   };
 
@@ -97,7 +107,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     backgroundColor: '#f5f5f5',
     borderRadius: 24,
     paddingHorizontal: 16,
@@ -108,7 +118,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     maxHeight: 100,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    paddingTop: Platform.OS === 'ios' ? 8 : 6,
+    paddingBottom: Platform.OS === 'ios' ? 8 : 6,
+    textAlignVertical: 'center',
   },
   sendButton: {
     marginLeft: 8,

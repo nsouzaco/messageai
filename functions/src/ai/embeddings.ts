@@ -118,7 +118,13 @@ export async function searchMessages(
   }>
 > {
   try {
+    functions.logger.info('Generating embedding for query', { query, queryLength: query.length });
     const queryEmbedding = await generateEmbedding(query);
+    functions.logger.info('Query embedding generated', { 
+      embeddingLength: queryEmbedding.length,
+      firstValues: queryEmbedding.slice(0, 3),
+    });
+    
     const pinecone = getPineconeClient();
     const index = pinecone.index(INDEX_NAME);
 
@@ -134,7 +140,16 @@ export async function searchMessages(
       filter: Object.keys(filter).length > 0 ? filter : undefined,
     });
 
-    const minScore = options.minScore || 0.7;
+    const minScore = options.minScore !== undefined ? options.minScore : 0.7;
+
+    // Debug logging
+    functions.logger.info('Pinecone raw response', {
+      totalMatches: queryResponse.matches?.length || 0,
+      allScores: queryResponse.matches?.map(m => m.score) || [],
+      hasFilter: Object.keys(filter).length > 0,
+      filter,
+      minScore, // Log the actual threshold being used
+    });
 
     return (
       queryResponse.matches

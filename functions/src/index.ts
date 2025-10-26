@@ -12,10 +12,11 @@ admin.initializeApp();
 export { autoDetectDecisions, detectDecisions } from './features/detectDecisions';
 export { autoDetectPriority, detectPriority } from './features/detectPriority';
 export { detectScheduling } from './features/detectScheduling';
-export { extractActionItems } from './features/extractActionItems';
+export { autoExtractActionItems, extractActionItems } from './features/extractActionItems';
 export { autoGenerateEmbedding, batchGenerateEmbeddings } from './features/generateEmbeddings';
 export { semanticSearch } from './features/semanticSearch';
 export { summarizeThread } from './features/summarizeThread';
+export { testPinecone } from './features/testPinecone';
 
 // Utility functions for maintenance
 import * as functions from 'firebase-functions';

@@ -54,12 +54,16 @@ export const detectDecisions = functions.https.onCall(
       }
 
       const userId = context.auth.uid;
-      const { conversationId, threadId, messageLimit = 20 } = data;
+      const { conversationId, threadId, messageLimit } = data;
+      
+      // Ensure messageLimit is a valid integer
+      const limit = messageLimit && typeof messageLimit === 'number' ? messageLimit : 20;
 
       logInfo('Decision detection requested', {
         userId,
         conversationId,
         threadId,
+        messageLimit: limit,
       });
 
       // Validate input
@@ -83,7 +87,7 @@ export const detectDecisions = functions.https.onCall(
         .doc(conversationId)
         .collection('messages')
         .orderBy('timestamp', 'desc')
-        .limit(messageLimit);
+        .limit(limit);
 
       if (threadId) {
         query = query.where('threadId', '==', threadId);

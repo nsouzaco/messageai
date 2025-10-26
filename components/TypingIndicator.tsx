@@ -91,7 +91,8 @@ export default function TypingIndicator({ userNames }: TypingIndicatorProps) {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    backgroundColor: '#fff',
   },
   bubble: {
     backgroundColor: '#E8E8E8',

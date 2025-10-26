@@ -88,11 +88,12 @@ export const batchGenerateEmbeddings = functions.https.onCall(
 
       if (conversationId) {
         // Generate embeddings for specific conversation
+        // Fetch recent messages (don't filter by embeddingId since field may not exist)
         messagesQuery = db
           .collection('conversations')
           .doc(conversationId)
           .collection('messages')
-          .where('embeddingId', '==', null)
+          .orderBy('timestamp', 'desc')
           .limit(limit);
       } else {
         // This won't work with subcollections, so we'll need to iterate conversations
@@ -104,10 +105,17 @@ export const batchGenerateEmbeddings = functions.https.onCall(
 
       const messagesSnapshot = await messagesQuery.get();
 
+      logInfo('Messages fetched for batch embedding', {
+        conversationId,
+        messageCount: messagesSnapshot.docs.length,
+        isEmpty: messagesSnapshot.empty,
+      });
+
       if (messagesSnapshot.empty) {
         return {
           processed: 0,
-          message: 'No messages without embeddings found',
+          failed: 0,
+          message: 'No messages found in this conversation',
         };
       }
 
