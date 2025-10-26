@@ -1,8 +1,9 @@
 import { ConversationType, DeliveryStatus, Message, MessageType, User } from '@/types';
 import { formatMessageTime } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Audio } from 'expo-av';
+import React, { useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CachedImage from './CachedImage';
 import PriorityBadge from './PriorityBadge';
 
@@ -31,6 +32,51 @@ export default function MessageBubble({
   onOpenThread,
   replyCount,
 }: MessageBubbleProps) {
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+
+  const playAudio = async () => {
+    if (!message.audioUrl) return;
+
+    try {
+      setIsLoadingAudio(true);
+
+      if (sound) {
+        // If sound exists, toggle play/pause
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded) {
+          if (status.isPlaying) {
+            await sound.pauseAsync();
+            setIsPlaying(false);
+          } else {
+            await sound.playAsync();
+            setIsPlaying(true);
+          }
+        }
+      } else {
+        // Load and play new sound
+        const { sound: newSound } = await Audio.Sound.createAsync(
+          { uri: message.audioUrl },
+          { shouldPlay: true },
+          (status) => {
+            if (status.isLoaded && status.didJustFinish) {
+              setIsPlaying(false);
+              newSound.unloadAsync();
+              setSound(null);
+            }
+          }
+        );
+        setSound(newSound);
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Error playing audio:', error);
+    } finally {
+      setIsLoadingAudio(false);
+    }
+  };
+
   const getStatusIcon = () => {
     if (!isOwnMessage) return null;
 
@@ -165,12 +211,24 @@ export default function MessageBubble({
 
             {/* Audio Message */}
             {message.messageType === MessageType.AUDIO && message.audioUrl && (
-              <View style={styles.audioMessage}>
-                <Ionicons name="play-circle" size={32} color={isOwnMessage ? '#fff' : '#007AFF'} />
+              <TouchableOpacity 
+                style={styles.audioMessage}
+                onPress={playAudio}
+                disabled={isLoadingAudio}
+              >
+                {isLoadingAudio ? (
+                  <ActivityIndicator size="small" color={isOwnMessage ? '#fff' : '#007AFF'} />
+                ) : (
+                  <Ionicons 
+                    name={isPlaying ? "pause-circle" : "play-circle"} 
+                    size={32} 
+                    color={isOwnMessage ? '#fff' : '#007AFF'} 
+                  />
+                )}
                 <Text style={[styles.text, isOwnMessage ? styles.ownText : styles.otherText]}>
-                  🎤 Voice message {message.audioDuration ? `(${Math.floor(message.audioDuration)}s)` : ''}
+                  {isPlaying ? 'Playing...' : '🎤 Voice message'} {message.audioDuration ? `(${Math.floor(message.audioDuration)}s)` : ''}
                 </Text>
-              </View>
+              </TouchableOpacity>
             )}
 
             {/* Text Message */}

@@ -7,10 +7,11 @@ import TypingIndicator from '@/components/TypingIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChat } from '@/contexts/ChatContext';
 import { listenToTyping, listenToUserPresence, setUserTyping } from '@/services/firebase/realtimeDb';
-import { uploadImageMessage } from '@/services/firebase/storage';
+import { uploadAudioMessage, uploadImageMessage } from '@/services/firebase/storage';
 import { ConversationType, Message, MessageType, OnlineStatus, Presence, TypingStatus } from '@/types';
 import { getInitials } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
 import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -40,6 +41,8 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [showActionMenu, setShowActionMenu] = useState(false);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const conversation = conversations.find((c) => c.id === conversationId);
@@ -201,9 +204,96 @@ export default function ChatScreen() {
     }
   };
 
-  const handleVoiceMessage = () => {
-    // TODO: Implement voice message recording
-    Alert.alert('Voice Message', 'Voice message recording will be implemented soon!');
+  const handleVoiceMessage = async () => {
+    if (isRecording) {
+      // Stop recording
+      await stopRecording();
+    } else {
+      // Start recording
+      await startRecording();
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      // Request permission
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Microphone permission is required to record voice messages');
+        return;
+      }
+
+      // Set audio mode
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      // Start recording
+      const { recording: newRecording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+
+      setRecording(newRecording);
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      Alert.alert('Error', 'Failed to start recording');
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recording) return;
+
+    try {
+      setIsRecording(false);
+      
+      // Get duration before stopping
+      const status = await recording.getStatusAsync();
+      const durationSeconds = status.durationMillis / 1000;
+      
+      await recording.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+      });
+
+      const uri = recording.getURI();
+      setRecording(null);
+
+      if (uri && user) {
+        await handleSendAudio(uri, durationSeconds);
+      }
+    } catch (error) {
+      console.error('Failed to stop recording:', error);
+      Alert.alert('Error', 'Failed to stop recording');
+    }
+  };
+
+  const handleSendAudio = async (audioUri: string, durationSeconds: number) => {
+    if (!user) return;
+
+    setSending(true);
+    try {
+      // Upload audio to Firebase Storage
+      const audioUrl = await uploadAudioMessage(conversationId, user.id, audioUri);
+      
+      // Send message with audio URL
+      await sendMessage(conversationId, '', {
+        messageType: MessageType.AUDIO,
+        audioUrl,
+        audioDuration: durationSeconds,
+      });
+
+      // Scroll to bottom
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    } catch (error) {
+      console.error('Error sending audio:', error);
+      Alert.alert('Error', 'Failed to send voice message. Please try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const getHeaderTitle = () => {
@@ -402,11 +492,15 @@ export default function ChatScreen() {
           />
         </View>
         <TouchableOpacity
-          style={styles.micButton}
+          style={[styles.micButton, isRecording && styles.micButtonRecording]}
           onPress={handleVoiceMessage}
           disabled={sending}
         >
-          <Ionicons name="mic" size={28} color="#007AFF" />
+          <Ionicons 
+            name={isRecording ? "stop-circle" : "mic"} 
+            size={28} 
+            color={isRecording ? "#FF3B30" : "#007AFF"} 
+          />
         </TouchableOpacity>
       </View>
 
@@ -515,6 +609,9 @@ const styles = StyleSheet.create({
   },
   micButton: {
     paddingLeft: 4,
+  },
+  micButtonRecording: {
+    opacity: 0.8,
   },
   inputWrapper: {
     flex: 1,
