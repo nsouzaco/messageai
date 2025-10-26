@@ -113,13 +113,12 @@ const styles = StyleSheet.create({
   },
   container: {
     backgroundColor: 'transparent',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    paddingBottom: 24,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
     alignItems: 'center',
   },
   inputWrapper: {
-    width: '90%',
+    width: '100%',
   },
   inputBorder: {
     borderRadius: 30,

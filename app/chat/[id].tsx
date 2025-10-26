@@ -10,10 +10,14 @@ import { listenToTyping, listenToUserPresence, setUserTyping } from '@/services/
 import { ConversationType, Message, OnlineStatus, Presence, TypingStatus } from '@/types';
 import { getInitials } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -108,6 +112,75 @@ export default function ChatScreen() {
   const handleTyping = async (isTyping: boolean) => {
     if (!user) return;
     await setUserTyping(conversationId, user.id, isTyping);
+  };
+
+  const handleAttachment = async () => {
+    if (Platform.OS === 'ios') {
+      Alert.alert(
+        'Add Attachment',
+        'Choose an option',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Take Photo', onPress: handleTakePhoto },
+          { text: 'Choose from Library', onPress: handlePickImage },
+        ]
+      );
+    } else {
+      Alert.alert(
+        'Add Attachment',
+        'Choose an option',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Take Photo', onPress: handleTakePhoto },
+          { text: 'Choose from Library', onPress: handlePickImage },
+        ]
+      );
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Camera permission is required to take photos');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      // TODO: Implement image upload to Firebase Storage and send as message
+      Alert.alert('Photo Selected', 'Image upload will be implemented soon!');
+      console.log('Image URI:', result.assets[0].uri);
+    }
+  };
+
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Photo library permission is required');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      // TODO: Implement image upload to Firebase Storage and send as message
+      Alert.alert('Image Selected', 'Image upload will be implemented soon!');
+      console.log('Image URI:', result.assets[0].uri);
+    }
+  };
+
+  const handleVoiceMessage = () => {
+    // TODO: Implement voice message recording
+    Alert.alert('Voice Message', 'Voice message recording will be implemented soon!');
   };
 
   const getHeaderTitle = () => {
@@ -223,13 +296,18 @@ export default function ChatScreen() {
   const headerImage = getHeaderImage();
 
   return (
-    <KeyboardAvoidingView
+    <LinearGradient
+      colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
-      {/* Header */}
-      <View style={styles.header}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        {/* Header */}
+        <BlurView intensity={80} tint="light" style={styles.headerBlur}>
+          <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#007AFF" />
         </TouchableOpacity>
@@ -266,9 +344,10 @@ export default function ChatScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerActions} />
-      </View>
+          </View>
+        </BlurView>
 
-      {/* Messages */}
+        {/* Messages */}
       <FlatList
         ref={flatListRef}
         data={conversationMessages}
@@ -283,29 +362,54 @@ export default function ChatScreen() {
       {/* Typing Indicator - positioned between messages and input */}
       {renderFooter()}
 
-      {/* Input */}
-      <MessageInput
-        onSend={handleSendMessage}
-        onTyping={handleTyping}
-        disabled={sending}
-      />
+      {/* Input with Plus and Microphone Buttons */}
+      <View style={styles.inputRow}>
+        <TouchableOpacity
+          style={styles.plusButton}
+          onPress={handleAttachment}
+          disabled={sending}
+        >
+          <Ionicons name="add-circle" size={36} color="#007AFF" />
+        </TouchableOpacity>
+        <View style={styles.inputWrapper}>
+          <MessageInput
+            onSend={handleSendMessage}
+            onTyping={handleTyping}
+            disabled={sending}
+          />
+        </View>
+        <TouchableOpacity
+          style={styles.micButton}
+          onPress={handleVoiceMessage}
+          disabled={sending}
+        >
+          <Ionicons name="mic" size={28} color="#007AFF" />
+        </TouchableOpacity>
+      </View>
 
       {/* Message Action Menu */}
-      <MessageActionMenu
-        visible={showActionMenu}
-        message={selectedMessage}
-        conversationType={conversation?.type}
-        onClose={() => setShowActionMenu(false)}
-        onReplyInThread={handleReplyInThread}
-      />
-    </KeyboardAvoidingView>
+        <MessageActionMenu
+          visible={showActionMenu}
+          message={selectedMessage}
+          conversationType={conversation?.type}
+          onClose={() => setShowActionMenu(false)}
+          onReplyInThread={handleReplyInThread}
+        />
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  headerBlur: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   loadingContainer: {
     flex: 1,
@@ -319,9 +423,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 60,
     paddingBottom: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    backgroundColor: 'transparent',
   },
   backButton: {
     marginRight: 8,
@@ -376,6 +478,23 @@ const styles = StyleSheet.create({
   },
   messagesList: {
     paddingVertical: 12,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingTop: 12,
+    paddingBottom: 24,
+    backgroundColor: 'transparent',
+  },
+  plusButton: {
+    paddingRight: 4,
+  },
+  micButton: {
+    paddingLeft: 4,
+  },
+  inputWrapper: {
+    flex: 1,
   },
 });
 
