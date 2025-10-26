@@ -4,6 +4,7 @@ import { uploadProfilePicture } from '@/services/firebase/storage';
 import { OnlineStatus } from '@/types';
 import { getInitials } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
@@ -85,80 +86,92 @@ export default function SettingsScreen() {
         <Text style={styles.headerTitle}>Settings</Text>
       </View>
 
-      <View style={styles.profileSection}>
-        <TouchableOpacity
-          style={styles.avatarContainer}
-          onPress={handleChangeProfilePicture}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <View style={styles.avatarPlaceholder}>
-              <ActivityIndicator color="#fff" />
-            </View>
-          ) : user.profilePicture ? (
-            <CachedImage uri={user.profilePicture} style={styles.avatar} borderRadius={50} />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarText}>{getInitials(user.displayName)}</Text>
-            </View>
-          )}
-          <View style={styles.cameraIcon}>
-            <Ionicons name="camera" size={16} color="#fff" />
-          </View>
-        </TouchableOpacity>
+      <View style={styles.profileSectionWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.glassCard}>
+          <View style={styles.profileSection}>
+            <TouchableOpacity
+              style={styles.avatarContainer}
+              onPress={handleChangeProfilePicture}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <View style={styles.avatarPlaceholder}>
+                  <ActivityIndicator color="#fff" />
+                </View>
+              ) : user.profilePicture ? (
+                <CachedImage uri={user.profilePicture} style={styles.avatar} borderRadius={50} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarText}>{getInitials(user.displayName)}</Text>
+                </View>
+              )}
+              <View style={styles.cameraIcon}>
+                <Ionicons name="camera" size={16} color="#fff" />
+              </View>
+            </TouchableOpacity>
 
-        <Text style={styles.displayName}>{user.displayName}</Text>
-        <Text style={styles.username}>@{user.username}</Text>
-        <View style={styles.statusBadge}>
-          <View
-            style={[
-              styles.statusDot,
-              { backgroundColor: user.onlineStatus === OnlineStatus.ONLINE ? '#4CAF50' : '#999' },
-            ]}
-          />
-          <Text style={styles.statusText}>
-            {user.onlineStatus === OnlineStatus.ONLINE ? 'Online' : 'Offline'}
-          </Text>
-        </View>
+            <Text style={styles.displayName}>{user.displayName}</Text>
+            <Text style={styles.username}>@{user.username}</Text>
+            <View style={styles.statusBadge}>
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: user.onlineStatus === OnlineStatus.ONLINE ? '#4CAF50' : '#999' },
+                ]}
+              />
+              <Text style={styles.statusText}>
+                {user.onlineStatus === OnlineStatus.ONLINE ? 'Online' : 'Offline'}
+              </Text>
+            </View>
+          </View>
+        </BlurView>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account Information</Text>
+      <View style={styles.sectionWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.glassCard}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Account Information</Text>
 
-        <View style={styles.infoItem}>
-          <Ionicons name="mail-outline" size={20} color="#666" />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>Email</Text>
-            <Text style={styles.infoValue}>{user.email}</Text>
-          </View>
-        </View>
+            <View style={styles.infoItem}>
+              <Ionicons name="mail-outline" size={20} color="#666" />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Email</Text>
+                <Text style={styles.infoValue}>{user.email}</Text>
+              </View>
+            </View>
 
-        <View style={styles.infoItem}>
-          <Ionicons name="person-outline" size={20} color="#666" />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>Username</Text>
-            <Text style={styles.infoValue}>@{user.username}</Text>
-          </View>
-        </View>
+            <View style={styles.infoItem}>
+              <Ionicons name="person-outline" size={20} color="#666" />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Username</Text>
+                <Text style={styles.infoValue}>@{user.username}</Text>
+              </View>
+            </View>
 
-        <View style={styles.infoItem}>
-          <Ionicons name="time-outline" size={20} color="#666" />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>Member Since</Text>
-            <Text style={styles.infoValue}>
-              {new Date(user.createdAt).toLocaleDateString()}
-            </Text>
+            <View style={styles.infoItem}>
+              <Ionicons name="time-outline" size={20} color="#666" />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Member Since</Text>
+                <Text style={styles.infoValue}>
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </Text>
+              </View>
+            </View>
           </View>
-        </View>
+        </BlurView>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Actions</Text>
+      <View style={styles.sectionWrapper}>
+        <BlurView intensity={30} tint="light" style={styles.glassCard}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Actions</Text>
 
-        <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
-          <Text style={[styles.actionText, styles.actionTextDanger]}>Logout</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
+              <Text style={[styles.actionText, styles.actionTextDanger]}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </BlurView>
       </View>
 
       <View style={styles.footer}>
@@ -186,20 +199,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 60,
     paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   headerTitle: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#000',
   },
+  profileSectionWrapper: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  sectionWrapper: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  glassCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+  },
   profileSection: {
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     alignItems: 'center',
     paddingVertical: 32,
-    marginBottom: 16,
   },
   avatarContainer: {
     position: 'relative',
@@ -267,9 +293,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   section: {
-    backgroundColor: '#fff',
-    marginBottom: 16,
+    backgroundColor: 'transparent',
     paddingVertical: 16,
+    paddingHorizontal: 16,
   },
   sectionTitle: {
     fontSize: 18,
