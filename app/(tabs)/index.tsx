@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useChat } from '@/contexts/ChatContext';
 import { Conversation } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import {
@@ -77,7 +78,10 @@ export default function ChatListScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
+      style={styles.container}
+    >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Chats</Text>
       </View>
@@ -96,14 +100,13 @@ export default function ChatListScreen() {
       <TouchableOpacity style={styles.fab} onPress={handleNewChat}>
         <Ionicons name="add" size={28} color="#fff" />
       </TouchableOpacity>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',

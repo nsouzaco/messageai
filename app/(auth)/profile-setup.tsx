@@ -3,6 +3,7 @@ import { uploadProfilePicture } from '@/services/firebase/storage';
 import { getStorageErrorMessage } from '@/utils/errorMessages';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -23,7 +24,7 @@ export default function ProfileSetupScreen() {
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -68,7 +69,10 @@ export default function ProfileSetupScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
+      style={styles.container}
+    >
       <View style={styles.content}>
         <Text style={styles.title}>Add Profile Picture</Text>
         <Text style={styles.subtitle}>Help others recognize you</Text>
@@ -111,14 +115,13 @@ export default function ProfileSetupScreen() {
           </TouchableOpacity>
         )}
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   content: {
     flex: 1,

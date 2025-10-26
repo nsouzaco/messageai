@@ -5,6 +5,7 @@ import { OnlineStatus } from '@/types';
 import { getInitials } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -23,7 +24,7 @@ export default function SettingsScreen() {
   const handleChangeProfilePicture = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -65,14 +66,21 @@ export default function SettingsScreen() {
 
   if (!user) {
     return (
-      <View style={styles.loadingContainer}>
+      <LinearGradient
+        colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
+        style={styles.loadingContainer}
+      >
         <ActivityIndicator size="large" color="#007AFF" />
-      </View>
+      </LinearGradient>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <LinearGradient
+      colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
+      style={styles.container}
+    >
+      <ScrollView style={styles.scrollContent}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Settings</Text>
       </View>
@@ -157,20 +165,22 @@ export default function SettingsScreen() {
         <Text style={styles.footerText}>MessageAI v1.0.0</Text>
         <Text style={styles.footerSubtext}>Built with React Native, Expo, and Firebase</Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+  },
+  scrollContent: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
   },
   header: {
     paddingHorizontal: 16,

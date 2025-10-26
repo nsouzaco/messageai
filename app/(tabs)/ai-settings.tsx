@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -51,25 +52,34 @@ export default function AIHubScreen() {
   if (showSettings) {
     // Settings view (for future implementation)
     return (
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => setShowSettings(false)} 
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color="#007AFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>AI Settings</Text>
-        </View>
-        <View style={styles.settingsPlaceholder}>
-          <Text style={styles.placeholderText}>AI Settings Coming Soon</Text>
-        </View>
-      </ScrollView>
+      <LinearGradient
+        colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
+        style={styles.container}
+      >
+        <ScrollView>
+          <View style={styles.header}>
+            <TouchableOpacity 
+              onPress={() => setShowSettings(false)} 
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#007AFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>AI Settings</Text>
+          </View>
+          <View style={styles.settingsPlaceholder}>
+            <Text style={styles.placeholderText}>AI Settings Coming Soon</Text>
+          </View>
+        </ScrollView>
+      </LinearGradient>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <LinearGradient
+      colors={['#FFF5F7', '#F5E6FF', '#FFFFFF']}
+      style={styles.container}
+    >
+      <ScrollView showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -178,14 +188,14 @@ export default function AIHubScreen() {
       </View>
 
       <View style={styles.bottomSpacer} />
-    </ScrollView>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
   },
   header: {
     backgroundColor: '#fff',
