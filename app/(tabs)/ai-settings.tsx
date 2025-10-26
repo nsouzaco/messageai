@@ -3,194 +3,180 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Alert,
     ScrollView,
     StyleSheet,
-    Switch,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
 
-export default function AISettingsScreen() {
+type FeatureCardProps = {
+  icon: keyof typeof Ionicons.glyphMap;
+  iconColor: string;
+  iconBg: string;
+  title: string;
+  description: string;
+  onPress: () => void;
+  badge?: string;
+};
+
+function FeatureCard({ icon, iconColor, iconBg, title, description, onPress, badge }: FeatureCardProps) {
+  return (
+    <TouchableOpacity style={styles.featureCard} onPress={onPress} activeOpacity={0.7}>
+      <View style={[styles.featureIconContainer, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={28} color={iconColor} />
+      </View>
+      <View style={styles.featureCardContent}>
+        <View style={styles.featureCardHeader}>
+          <Text style={styles.featureCardTitle}>{title}</Text>
+          {badge && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{badge}</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.featureCardDescription}>{description}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color="#999" />
+    </TouchableOpacity>
+  );
+}
+
+export default function AIHubScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const [showSettings, setShowSettings] = useState(false);
 
-  // AI feature toggles (in production, these would be stored in Firestore user preferences)
-  const [aiEnabled, setAiEnabled] = useState(true);
-  const [threadSummaries, setThreadSummaries] = useState(true);
-  const [actionItems, setActionItems] = useState(true);
-  const [priorityDetection, setPriorityDetection] = useState(true);
-  const [smartSearch, setSmartSearch] = useState(true);
-  const [decisionTracking, setDecisionTracking] = useState(true);
-  const [schedulingAssistant, setSchedulingAssistant] = useState(true);
 
-  const handleMasterToggle = (value: boolean) => {
-    setAiEnabled(value);
-    if (!value) {
-      // Disable all features when master switch is off
-      setThreadSummaries(false);
-      setActionItems(false);
-      setPriorityDetection(false);
-      setSmartSearch(false);
-      setDecisionTracking(false);
-      setSchedulingAssistant(false);
-    } else {
-      // Enable all features when master switch is on
-      setThreadSummaries(true);
-      setActionItems(true);
-      setPriorityDetection(true);
-      setSmartSearch(true);
-      setDecisionTracking(true);
-      setSchedulingAssistant(true);
-    }
-  };
-
-  const handleSave = () => {
-    // In production: save to Firestore user preferences
-    Alert.alert('Settings Saved', 'Your AI preferences have been updated.');
-  };
-
-  const renderFeatureToggle = (
-    title: string,
-    description: string,
-    value: boolean,
-    onValueChange: (value: boolean) => void,
-    icon: keyof typeof Ionicons.glyphMap
-  ) => (
-    <View style={styles.featureItem}>
-      <View style={styles.featureIcon}>
-        <Ionicons name={icon} size={24} color={value ? '#007AFF' : '#999'} />
-      </View>
-      <View style={styles.featureContent}>
-        <Text style={styles.featureTitle}>{title}</Text>
-        <Text style={styles.featureDescription}>{description}</Text>
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        disabled={!aiEnabled}
-        trackColor={{ false: '#E0E0E0', true: '#007AFF40' }}
-        thumbColor={value ? '#007AFF' : '#F4F4F4'}
-      />
-    </View>
-  );
+  if (showSettings) {
+    // Settings view (for future implementation)
+    return (
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            onPress={() => setShowSettings(false)} 
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#007AFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>AI Settings</Text>
+        </View>
+        <View style={styles.settingsPlaceholder}>
+          <Text style={styles.placeholderText}>AI Settings Coming Soon</Text>
+        </View>
+      </ScrollView>
+    );
+  }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
-        <Ionicons name="sparkles" size={48} color="#007AFF" />
-        <Text style={styles.headerTitle}>AI Features</Text>
-        <Text style={styles.headerSubtitle}>
-          Enhance your team collaboration with AI-powered productivity tools
-        </Text>
-      </View>
-
-      {/* Master Toggle */}
-      <View style={styles.section}>
-        <View style={styles.masterToggle}>
-          <View style={styles.masterToggleContent}>
-            <Text style={styles.masterToggleTitle}>Enable AI Features</Text>
-            <Text style={styles.masterToggleDescription}>
-              Turn off to disable all AI features
-            </Text>
+        <View style={styles.headerContent}>
+          <View style={styles.sparkleIcon}>
+            <Ionicons name="sparkles" size={32} color="#007AFF" />
           </View>
-          <Switch
-            value={aiEnabled}
-            onValueChange={handleMasterToggle}
-            trackColor={{ false: '#E0E0E0', true: '#007AFF40' }}
-            thumbColor={aiEnabled ? '#007AFF' : '#F4F4F4'}
-          />
-        </View>
-      </View>
-
-      {/* Individual Features */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Individual Features</Text>
-
-        {renderFeatureToggle(
-          'Thread Summarization',
-          'AI-powered summaries of long thread conversations',
-          threadSummaries,
-          setThreadSummaries,
-          'document-text-outline'
-        )}
-
-        {renderFeatureToggle(
-          'Action Item Extraction',
-          'Automatically detect tasks from messages',
-          actionItems,
-          setActionItems,
-          'checkbox-outline'
-        )}
-
-        {renderFeatureToggle(
-          'Priority Detection',
-          'Auto-flag high priority messages',
-          priorityDetection,
-          setPriorityDetection,
-          'alert-circle-outline'
-        )}
-
-        {renderFeatureToggle(
-          'Smart Search',
-          'Semantic search across all messages',
-          smartSearch,
-          setSmartSearch,
-          'search-outline'
-        )}
-
-        {renderFeatureToggle(
-          'Decision Tracking',
-          'Automatically log team decisions',
-          decisionTracking,
-          setDecisionTracking,
-          'bulb-outline'
-        )}
-
-        {renderFeatureToggle(
-          'Scheduling Assistant',
-          'Get meeting time suggestions across time zones',
-          schedulingAssistant,
-          setSchedulingAssistant,
-          'calendar-outline'
-        )}
-      </View>
-
-      {/* Privacy & Data */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Privacy & Data</Text>
-        <View style={styles.infoBox}>
-          <Ionicons name="shield-checkmark" size={20} color="#34C759" />
-          <Text style={styles.infoText}>
-            Your conversations are processed securely. No personal information is
-            shared with third parties.
+          <Text style={styles.headerTitle}>AI Assistant</Text>
+          <Text style={styles.headerSubtitle}>
+            Powered by OpenAI • Smart features for your team
           </Text>
         </View>
       </View>
 
-      {/* Cost Info */}
+      {/* Main Features */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>About AI Features</Text>
-        <View style={styles.infoBox}>
-          <Ionicons name="information-circle" size={20} color="#007AFF" />
-          <View style={styles.infoTextContainer}>
-            <Text style={styles.infoText}>
-              AI features use OpenAI GPT models to analyze and enhance your
-              conversations. Features like priority detection run automatically in
-              the background.
-            </Text>
+        <Text style={styles.sectionTitle}>PRODUCTIVITY TOOLS</Text>
+        
+        <FeatureCard
+          icon="checkbox-outline"
+          iconColor="#34C759"
+          iconBg="#E8F5E9"
+          title="Tasks"
+          description="AI-extracted action items from your conversations"
+          onPress={() => router.push('/action-items')}
+        />
+
+        <FeatureCard
+          icon="bulb-outline"
+          iconColor="#FF9500"
+          iconBg="#FFF3E0"
+          title="Decisions"
+          description="Track important decisions made by your team"
+          onPress={() => router.push('/decisions')}
+        />
+
+        <FeatureCard
+          icon="search-outline"
+          iconColor="#007AFF"
+          iconBg="#E3F2FD"
+          title="Smart Search"
+          description="Find messages using natural language queries"
+          onPress={() => router.push('/search')}
+        />
+      </View>
+
+      {/* Active AI Features */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>ACTIVE AI FEATURES</Text>
+        
+        <View style={styles.aiFeaturesList}>
+          <View style={styles.aiFeatureItem}>
+            <View style={styles.aiFeatureIcon}>
+              <Ionicons name="alert-circle" size={18} color="#FF3B30" />
+            </View>
+            <View style={styles.aiFeatureContent}>
+              <Text style={styles.aiFeatureTitle}>Priority Detection</Text>
+              <Text style={styles.aiFeatureDesc}>Auto-flags urgent messages</Text>
+            </View>
+            <View style={styles.aiFeatureStatus}>
+              <View style={styles.statusDot} />
+              <Text style={styles.statusText}>Active</Text>
+            </View>
+          </View>
+
+          <View style={styles.aiFeatureItem}>
+            <View style={styles.aiFeatureIcon}>
+              <Ionicons name="document-text" size={18} color="#5856D6" />
+            </View>
+            <View style={styles.aiFeatureContent}>
+              <Text style={styles.aiFeatureTitle}>Thread Summaries</Text>
+              <Text style={styles.aiFeatureDesc}>Summarize long conversations</Text>
+            </View>
+            <View style={styles.aiFeatureStatus}>
+              <View style={styles.statusDot} />
+              <Text style={styles.statusText}>Active</Text>
+            </View>
+          </View>
+
+          <View style={styles.aiFeatureItem}>
+            <View style={styles.aiFeatureIcon}>
+              <Ionicons name="analytics" size={18} color="#32ADE6" />
+            </View>
+            <View style={styles.aiFeatureContent}>
+              <Text style={styles.aiFeatureTitle}>Smart Analysis</Text>
+              <Text style={styles.aiFeatureDesc}>Background task extraction</Text>
+            </View>
+            <View style={styles.aiFeatureStatus}>
+              <View style={styles.statusDot} />
+              <Text style={styles.statusText}>Active</Text>
+            </View>
           </View>
         </View>
       </View>
 
-      {/* Save Button */}
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>Save Preferences</Text>
-      </TouchableOpacity>
+      {/* Info Section */}
+      <View style={styles.section}>
+        <View style={styles.infoCard}>
+          <View style={styles.infoHeader}>
+            <Ionicons name="information-circle" size={20} color="#007AFF" />
+            <Text style={styles.infoTitle}>How it works</Text>
+          </View>
+          <Text style={styles.infoText}>
+            AI features run automatically in the background using OpenAI GPT models to enhance your conversations. All data is processed securely and never shared with third parties.
+          </Text>
+        </View>
+      </View>
 
-      {/* Bottom Spacing */}
       <View style={styles.bottomSpacer} />
     </ScrollView>
   );
@@ -199,126 +185,202 @@ export default function AISettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: '#F2F2F7',
   },
   header: {
     backgroundColor: '#fff',
-    padding: 24,
-    alignItems: 'center',
+    paddingTop: 60,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: '#E5E5EA',
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  sparkleIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#E3F2FD',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
     color: '#000',
-    marginTop: 12,
+    marginBottom: 8,
   },
   headerSubtitle: {
-    fontSize: 15,
-    color: '#666',
+    fontSize: 14,
+    color: '#8E8E93',
     textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   section: {
-    backgroundColor: '#fff',
-    marginTop: 16,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#E0E0E0',
+    marginTop: 24,
+    paddingHorizontal: 16,
   },
   sectionTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#666',
+    color: '#8E8E93',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    paddingHorizontal: 16,
     marginBottom: 12,
+    paddingHorizontal: 4,
   },
-  masterToggle: {
+  featureCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  masterToggleContent: {
+  featureIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  featureCardContent: {
     flex: 1,
   },
-  masterToggleTitle: {
-    fontSize: 17,
+  featureCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  featureCardTitle: {
+    fontSize: 18,
     fontWeight: '600',
     color: '#000',
   },
-  masterToggleDescription: {
+  featureCardDescription: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#E0E0E0',
-  },
-  featureIcon: {
-    marginRight: 12,
-  },
-  featureContent: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#000',
-  },
-  featureDescription: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 2,
-  },
-  infoBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#F5F5F5',
-    padding: 16,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    gap: 12,
-  },
-  infoTextContainer: {
-    flex: 1,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#666',
+    color: '#8E8E93',
     lineHeight: 20,
   },
-  saveButton: {
-    backgroundColor: '#007AFF',
-    marginHorizontal: 16,
-    marginTop: 24,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+  badge: {
+    backgroundColor: '#FF3B30',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 8,
   },
-  saveButtonText: {
-    fontSize: 17,
+  badgeText: {
+    fontSize: 11,
     fontWeight: '600',
     color: '#fff',
   },
+  aiFeaturesList: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  aiFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E5E5EA',
+  },
+  aiFeatureIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#F2F2F7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  aiFeatureContent: {
+    flex: 1,
+  },
+  aiFeatureTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 2,
+  },
+  aiFeatureDesc: {
+    fontSize: 13,
+    color: '#8E8E93',
+  },
+  aiFeatureStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#34C759',
+  },
+  statusText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#34C759',
+  },
+  infoCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#8E8E93',
+    lineHeight: 22,
+  },
+  backButton: {
+    padding: 4,
+    marginBottom: 12,
+  },
+  settingsPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  placeholderText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#8E8E93',
+  },
   bottomSpacer: {
-    height: 32,
+    height: 40,
   },
 });
 

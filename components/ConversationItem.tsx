@@ -10,7 +10,8 @@ interface ConversationItemProps {
   onPress: () => void;
 }
 
-export default function ConversationItem({
+// PERFORMANCE: Memoize to prevent unnecessary re-renders
+const ConversationItem = React.memo(function ConversationItem({
   conversation,
   currentUserId,
   onPress,
@@ -81,7 +82,9 @@ export default function ConversationItem({
       </View>
     </TouchableOpacity>
   );
-}
+});
+
+export default ConversationItem;
 
 const styles = StyleSheet.create({
   container: {

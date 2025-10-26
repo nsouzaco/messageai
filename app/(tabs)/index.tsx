@@ -17,7 +17,7 @@ import {
 
 export default function ChatListScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { conversations, loading, refreshConversations } = useChat();
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -33,26 +33,6 @@ export default function ChatListScreen() {
 
   const handleNewChat = () => {
     router.push('/create-conversation');
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  const handleNavigateSearch = () => {
-    router.push('/search');
-  };
-
-  const handleNavigateActionItems = () => {
-    router.push('/action-items');
-  };
-
-  const handleNavigateDecisions = () => {
-    router.push('/decisions');
   };
 
   const renderConversation = ({ item }: { item: Conversation }) => {
@@ -100,27 +80,6 @@ export default function ChatListScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Chats</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={24} color="#007AFF" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* AI Features Quick Access */}
-      <View style={styles.aiQuickAccess}>
-        <TouchableOpacity style={styles.aiButton} onPress={handleNavigateSearch}>
-          <Ionicons name="search" size={20} color="#007AFF" />
-          <Text style={styles.aiButtonText}>Search</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.aiButton} onPress={handleNavigateActionItems}>
-          <Ionicons name="checkbox-outline" size={20} color="#007AFF" />
-          <Text style={styles.aiButtonText}>Tasks</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.aiButton} onPress={handleNavigateDecisions}>
-          <Ionicons name="bulb-outline" size={20} color="#007AFF" />
-          <Text style={styles.aiButtonText}>Decisions</Text>
-        </TouchableOpacity>
       </View>
 
       <FlatList
@@ -161,44 +120,6 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: '#000',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  headerButton: {
-    padding: 4,
-  },
-  aiQuickAccess: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#F9F9F9',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    gap: 8,
-  },
-  aiButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    gap: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  aiButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#007AFF',
   },
   emptyList: {
     flexGrow: 1,

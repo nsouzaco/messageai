@@ -154,17 +154,26 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
     try {
       unsubscribe = listenToConversations(user.id, async (conversations) => {
-        // Enrich conversations with participant details
+        // OPTIMIZATION: Show conversations immediately without participant details
+        dispatch({ type: 'SET_CONVERSATIONS', payload: conversations.map(c => ({...c, participantDetails: []})) });
+        
+        // Lazy load participant details in the background
         const enrichedConversations = await Promise.all(
           conversations.map(async (conversation) => {
-            const participantDetails = await getUsersByIds(conversation.participants);
-            return {
-              ...conversation,
-              participantDetails,
-            };
+            try {
+              const participantDetails = await getUsersByIds(conversation.participants);
+              return {
+                ...conversation,
+                participantDetails,
+              };
+            } catch (error) {
+              console.error('Error enriching conversation:', error);
+              return conversation;
+            }
           })
         );
 
+        // Update with enriched data
         dispatch({ type: 'SET_CONVERSATIONS', payload: enrichedConversations });
       });
     } catch (error) {

@@ -5,6 +5,7 @@ import {
     doc,
     getDoc,
     getDocs,
+    limit,
     onSnapshot,
     orderBy,
     query,
@@ -98,10 +99,12 @@ export const listenToConversations = (
   userId: string,
   callback: (conversations: Conversation[]) => void
 ) => {
+  // PERFORMANCE: Limit to 20 most recent conversations for faster initial load
   const q = query(
     collection(firestore, 'conversations'),
     where('participants', 'array-contains', userId),
-    orderBy('lastActivity', 'desc')
+    orderBy('lastActivity', 'desc'),
+    limit(20)
   );
 
   return onSnapshot(q, (snapshot) => {

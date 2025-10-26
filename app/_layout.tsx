@@ -115,10 +115,7 @@ function RootLayoutNav() {
     }
   }, [isAuthenticated, loading, segments]);
 
-  if (loading) {
-    return null; // Show splash screen while loading
-  }
-
+  // PERFORMANCE: Don't block rendering while auth loads - let routing handle it
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
