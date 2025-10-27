@@ -232,6 +232,29 @@ export const autoDetectPriority = functions.firestore
         messageId,
         priority: priorityData.priority,
       });
+
+      // Check for scheduling keywords after priority detection completes
+      const text = (messageData.text || '').toLowerCase();
+      const schedulingKeywords = [
+        'schedule', 'meeting', 'meet', 'call', 'catch up', 'sync', 'discuss', 'talk',
+        'next week', 'next tuesday', 'next monday', 'tomorrow', 'later',
+        'when can we', 'when should we', 'let\'s meet', 'let us meet',
+      ];
+
+      const hasSchedulingKeyword = schedulingKeywords.some((keyword) =>
+        text.includes(keyword)
+      );
+
+      if (hasSchedulingKeyword) {
+        logInfo('🗓️ Scheduling keywords detected, triggering scheduling detection', {
+          conversationId,
+          messageId,
+        });
+
+        // Trigger scheduling detection
+        const { detectSchedulingLogic } = require('./detectScheduling');
+        await detectSchedulingLogic(conversationId, messageId, messageData);
+      }
     } catch (error: any) {
       logError('Auto-priority detection failed', error, {
         messageId: context.params.messageId,

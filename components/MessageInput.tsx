@@ -15,12 +15,16 @@ interface MessageInputProps {
   onSend: (text: string) => void;
   onTyping?: (isTyping: boolean) => void;
   disabled?: boolean;
+  placeholder?: string;
+  noWrapper?: boolean;
 }
 
 export default function MessageInput({
   onSend,
   onTyping,
   disabled = false,
+  placeholder = 'Message',
+  noWrapper = false,
 }: MessageInputProps) {
   const [text, setText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -64,6 +68,40 @@ export default function MessageInput({
     onTyping?.(false);
   };
 
+  const inputContent = (
+    <View style={styles.inputBorder}>
+      <BlurView intensity={30} tint="light" style={styles.inputGlass}>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder={placeholder}
+            placeholderTextColor="#999"
+            value={text}
+            onChangeText={handleChangeText}
+            multiline
+            maxLength={1000}
+            editable={!disabled}
+          />
+          <TouchableOpacity
+            style={[styles.sendButton, text.trim().length === 0 && styles.sendButtonDisabled]}
+            onPress={handleSend}
+            disabled={disabled || text.trim().length === 0}
+          >
+            <Ionicons
+              name="send"
+              size={20}
+              color={text.trim().length > 0 ? '#007AFF' : '#999'}
+            />
+          </TouchableOpacity>
+        </View>
+      </BlurView>
+    </View>
+  );
+
+  if (noWrapper) {
+    return inputContent;
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -72,33 +110,7 @@ export default function MessageInput({
       <BlurView intensity={80} tint="light" style={styles.containerBlur}>
         <View style={styles.container}>
           <View style={styles.inputWrapper}>
-            <View style={styles.inputBorder}>
-              <BlurView intensity={30} tint="light" style={styles.inputGlass}>
-                <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Message"
-                  placeholderTextColor="#999"
-                  value={text}
-                  onChangeText={handleChangeText}
-                  multiline
-                  maxLength={1000}
-                  editable={!disabled}
-                />
-                <TouchableOpacity
-                  style={[styles.sendButton, text.trim().length === 0 && styles.sendButtonDisabled]}
-                  onPress={handleSend}
-                  disabled={disabled || text.trim().length === 0}
-                >
-                  <Ionicons
-                    name="send"
-                    size={20}
-                    color={text.trim().length > 0 ? '#007AFF' : '#999'}
-                  />
-                </TouchableOpacity>
-                </View>
-              </BlurView>
-            </View>
+            {inputContent}
           </View>
         </View>
       </BlurView>

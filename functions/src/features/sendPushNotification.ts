@@ -5,6 +5,7 @@ import { logError, logInfo, logWarning } from '../shared/logger';
 /**
  * Send push notification when a new message is created
  * This is a background trigger that runs automatically
+ * DISABLED: Temporarily disabled to reduce function conflicts
  */
 export const sendMessageNotification = functions.firestore
   .document('conversations/{conversationId}/messages/{messageId}')

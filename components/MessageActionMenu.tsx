@@ -1,5 +1,6 @@
 import { ConversationType, Message } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import React from 'react';
 import {
     Modal,
@@ -42,30 +43,32 @@ export default function MessageActionMenu({
       onRequestClose={onClose}
     >
       <Pressable style={styles.overlay} onPress={onClose}>
-        <View style={styles.menuContainer}>
-          {isGroupChat && (
+        <BlurView intensity={80} tint="light" style={styles.menuContainer}>
+          <View style={styles.menuContent}>
+            {isGroupChat && (
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={handleReplyInThread}
+              >
+                <Ionicons name="chatbox-outline" size={20} color="#007AFF" />
+                <Text style={styles.menuText}>Reply in thread</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Placeholder for future actions */}
+            {/* <TouchableOpacity style={styles.menuItem}>
+              <Ionicons name="copy-outline" size={20} color="#666" />
+              <Text style={styles.menuText}>Copy</Text>
+            </TouchableOpacity> */}
+
             <TouchableOpacity
-              style={styles.menuItem}
-              onPress={handleReplyInThread}
+              style={[styles.menuItem, styles.cancelButton]}
+              onPress={onClose}
             >
-              <Ionicons name="chatbox-outline" size={20} color="#007AFF" />
-              <Text style={styles.menuText}>Reply in thread</Text>
+              <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
-          )}
-
-          {/* Placeholder for future actions */}
-          {/* <TouchableOpacity style={styles.menuItem}>
-            <Ionicons name="copy-outline" size={20} color="#666" />
-            <Text style={styles.menuText}>Copy</Text>
-          </TouchableOpacity> */}
-
-          <TouchableOpacity
-            style={[styles.menuItem, styles.cancelButton]}
-            onPress={onClose}
-          >
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
+          </View>
+        </BlurView>
       </Pressable>
     </Modal>
   );
@@ -78,9 +81,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   menuContainer: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
+    overflow: 'hidden',
+  },
+  menuContent: {
     paddingTop: 8,
     paddingBottom: 34, // Safe area padding
   },
@@ -91,16 +96,19 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   menuText: {
     fontSize: 16,
     color: '#000',
+    fontWeight: '500',
   },
   cancelButton: {
     borderBottomWidth: 0,
     justifyContent: 'center',
     marginTop: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
   },
   cancelText: {
     fontSize: 16,

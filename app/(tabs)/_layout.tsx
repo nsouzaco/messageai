@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { Tabs, useRouter } from 'expo-router';
 import React from 'react';
-import { TouchableOpacity, View, StyleSheet, Platform } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export default function TabLayout() {
   const router = useRouter();

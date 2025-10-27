@@ -67,15 +67,7 @@ export const summarizeThread = functions.https.onCall(
       // Check rate limit
       await checkRateLimit(userId, 'summarizeThread', RATE_LIMITS.SUMMARIZE_THREAD);
 
-      // Check cache
-      const cacheKey = generateCacheKey('threadSummary', { conversationId, threadId });
-      const cached = await getCache<SummarizeThreadResponse>(cacheKey);
-      if (cached) {
-        logInfo('Returning cached summary', { userId, threadId, cached: true });
-        return { ...cached, cached: true };
-      }
-
-      // Fetch thread messages from Firestore
+      // Fetch thread messages from Firestore first to get message count
       const db = admin.firestore();
       const messagesSnapshot = await db
         .collection('conversations')
@@ -90,6 +82,20 @@ export const summarizeThread = functions.https.onCall(
           'not-found',
           'No messages found in thread'
         );
+      }
+
+      const messageCount = messagesSnapshot.size;
+
+      // Check cache with message count in key
+      const cacheKey = generateCacheKey('threadSummary', { 
+        conversationId, 
+        threadId, 
+        messageCount 
+      });
+      const cached = await getCache<SummarizeThreadResponse>(cacheKey);
+      if (cached) {
+        logInfo('Returning cached summary', { userId, threadId, messageCount, cached: true });
+        return { ...cached, cached: true };
       }
 
       // Get parent message for context

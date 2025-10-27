@@ -11,6 +11,8 @@ admin.initializeApp();
 // Export AI feature functions
 export { autoDetectDecisions, detectDecisions } from './features/detectDecisions';
 export { autoDetectPriority, detectPriority } from './features/detectPriority';
+// DISABLED: autoDetectScheduling now triggered from autoDetectPriority to avoid conflicts
+// export { autoDetectScheduling, detectScheduling } from './features/detectScheduling';
 export { detectScheduling } from './features/detectScheduling';
 export { autoExtractActionItems, extractActionItems } from './features/extractActionItems';
 export { autoGenerateEmbedding, batchGenerateEmbeddings } from './features/generateEmbeddings';
@@ -19,7 +21,9 @@ export { summarizeThread } from './features/summarizeThread';
 export { testPinecone } from './features/testPinecone';
 
 // Export push notification functions
-export { sendCustomNotification, sendMessageNotification } from './features/sendPushNotification';
+// DISABLED: Temporarily disabled to reduce function conflicts
+// export { sendCustomNotification, sendMessageNotification } from './features/sendPushNotification';
+export { sendCustomNotification } from './features/sendPushNotification';
 
 // Utility functions for maintenance
 import * as functions from 'firebase-functions';

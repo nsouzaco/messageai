@@ -234,3 +234,192 @@ export const detectScheduling = functions.https.onCall(
   }
 );
 
+/**
+ * Core scheduling detection logic (can be called from other functions)
+ */
+export const detectSchedulingLogic = async (
+  conversationId: string,
+  messageId: string,
+  messageData: any
+) => {
+  logInfo('🗓️ Starting scheduling detection logic', {
+    conversationId,
+    messageId,
+  });
+
+  // Fetch recent messages (last 10)
+  const db = admin.firestore();
+  logInfo('📥 Fetching messages from Firestore...');
+
+  const messagesSnapshot = await db
+    .collection('conversations')
+    .doc(conversationId)
+    .collection('messages')
+    .orderBy('timestamp', 'desc')
+    .limit(10)
+    .get();
+
+  logInfo(`📨 Found ${messagesSnapshot.size} messages`);
+
+  if (messagesSnapshot.empty) {
+    logInfo('⚠️ No messages found, stopping');
+    return;
+  }
+
+  // Get conversation participants
+  logInfo('👥 Fetching conversation participants...');
+  const conversationDoc = await db.collection('conversations').doc(conversationId).get();
+  const conversation = conversationDoc.data();
+  const participantIds = conversation?.participants || [];
+  logInfo(`👥 Found ${participantIds.length} participants`);
+
+  if (participantIds.length === 0) {
+    logInfo('⚠️ No participants found, stopping');
+    return;
+  }
+
+  // Get user details
+  logInfo('👤 Fetching user details...');
+  const usersSnapshot = await db
+    .collection('users')
+    .where(admin.firestore.FieldPath.documentId(), 'in', participantIds.slice(0, 10))
+    .get();
+
+  const users = new Map<string, any>();
+  usersSnapshot.docs.forEach((doc) => {
+    users.set(doc.id, doc.data());
+  });
+  logInfo(`👤 Loaded ${users.size} user profiles`);
+
+  // Format messages for prompt (filter out thread messages)
+  const messages = messagesSnapshot.docs
+    .filter((doc) => !doc.data().threadId) // Skip messages in threads
+    .reverse()
+    .map((doc) => {
+      const data = doc.data();
+      const user = users.get(data.senderId);
+      return {
+        senderId: data.senderId,
+        senderName: user?.displayName || 'Unknown',
+        text: data.text,
+        timestamp: data.timestamp,
+      };
+    });
+
+  // Since we already detected scheduling keywords, let's create a simple reason
+  const reason = `Scheduling need detected in conversation`;
+
+  logInfo('Creating scheduling suggestion based on keywords', {
+    conversationId,
+    messageCount: messages.length,
+  });
+
+  // Generate meeting time suggestions
+  const suggestedTimes: MeetingTime[] = [];
+  const now = new Date();
+
+  // Tomorrow at 10 AM
+  const tomorrow10am = new Date(now);
+  tomorrow10am.setDate(tomorrow10am.getDate() + 1);
+  tomorrow10am.setHours(10, 0, 0, 0);
+
+  // Day after tomorrow at 2 PM
+  const dayAfter2pm = new Date(now);
+  dayAfter2pm.setDate(dayAfter2pm.getDate() + 2);
+  dayAfter2pm.setHours(14, 0, 0, 0);
+
+  // Next week same day at 3 PM
+  const nextWeek3pm = new Date(now);
+  nextWeek3pm.setDate(nextWeek3pm.getDate() + 7);
+  nextWeek3pm.setHours(15, 0, 0, 0);
+
+  suggestedTimes.push({
+    utcTimestamp: tomorrow10am.getTime(),
+    localTime: tomorrow10am.toLocaleString('en-US', {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }),
+    score: 0.9,
+    reason: 'Next available business day',
+  });
+
+  suggestedTimes.push({
+    utcTimestamp: dayAfter2pm.getTime(),
+    localTime: dayAfter2pm.toLocaleString('en-US', {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }),
+    score: 0.85,
+    reason: 'Afternoon slot, good for all time zones',
+  });
+
+  suggestedTimes.push({
+    utcTimestamp: nextWeek3pm.getTime(),
+    localTime: nextWeek3pm.toLocaleString('en-US', {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }),
+    score: 0.8,
+    reason: 'More time to prepare',
+  });
+
+  // Store suggestion in Firestore
+  const suggestion: SchedulingSuggestion = {
+    id: `${conversationId}_${Date.now()}`,
+    conversationId,
+    participants: participantIds,
+    suggestedTimes,
+    reason,
+    messageId,
+    createdAt: Date.now(),
+  };
+
+  await db.collection('schedulingSuggestions').doc(suggestion.id).set(suggestion);
+
+  logInfo('✅ Scheduling suggestion created automatically', {
+    conversationId,
+    suggestionId: suggestion.id,
+    participants: participantIds,
+    timesCount: suggestedTimes.length,
+    reason,
+  });
+};
+
+/**
+ * Background function to auto-detect scheduling on new messages
+ * DISABLED: Now triggered from autoDetectPriority to avoid conflicts
+ */
+// export const autoDetectScheduling = functions.firestore
+//   .document('conversations/{conversationId}/messages/{messageId}')
+//   .onCreate(async (snapshot, context) => {
+//     const timer = startTimer();
+//     try {
+//       const messageData = snapshot.data();
+//       const { conversationId, messageId } = context.params;
+//       if (messageData.threadId) return;
+//       const text = (messageData.text || '').toLowerCase();
+//       const schedulingKeywords = [
+//         'schedule', 'meeting', 'meet', 'call', 'catch up', 'sync', 'discuss', 'talk',
+//         'next week', 'next tuesday', 'next monday', 'tomorrow', 'later',
+//         'when can we', 'when should we', 'let\'s meet', 'let us meet',
+//       ];
+//       const hasSchedulingKeyword = schedulingKeywords.some((keyword) => text.includes(keyword));
+//       if (!hasSchedulingKeyword) return;
+//       await detectSchedulingLogic(conversationId, messageId, messageData);
+//       timer.end('autoDetectScheduling', { conversationId, hasIntent: true });
+//     } catch (error: any) {
+//       logError('Auto-scheduling detection failed', error, {
+//         conversationId: context.params.conversationId,
+//       });
+//     }
+//   });
+

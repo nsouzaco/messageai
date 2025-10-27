@@ -9,14 +9,16 @@ import { getParentMessage } from '@/services/firebase/firestore';
 import { Message } from '@/types';
 import { formatMessageTime } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
-    FlatList,
     KeyboardAvoidingView,
     Platform,
+    ScrollView,
     StyleSheet,
     Text,
     View
@@ -30,7 +32,7 @@ export default function ThreadScreen() {
   
   const router = useRouter();
   const { user } = useAuth();
-  const { sendThreadReply: sendReply, listenToThread, threadMessages } = useChat();
+  const { conversations, sendThreadReply: sendReply, listenToThread, threadMessages } = useChat();
 
   const [parentMessage, setParentMessage] = useState<Message | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,6 +42,7 @@ export default function ThreadScreen() {
   const [showSummary, setShowSummary] = useState(false);
 
   const replies = threadMessages[parentMessageId] || [];
+  const conversation = conversations.find((c) => c.id === conversationId);
 
   useEffect(() => {
     // Load parent message
@@ -75,15 +78,13 @@ export default function ThreadScreen() {
     }
   };
 
-  const handleSummarizeThread = async () => {
-    if (replies.length < 3) {
-      Alert.alert(
-        'Not enough messages',
-        'At least 3 replies are needed to generate a summary.'
-      );
-      return;
-    }
+  const getSenderName = (senderId: string): string => {
+    if (senderId === user?.id) return 'You';
+    const sender = conversation?.participantDetails?.find((p) => p.id === senderId);
+    return sender?.displayName || sender?.username || 'Unknown';
+  };
 
+  const handleSummarizeThread = async () => {
     setSummarizing(true);
     try {
       const result = await summarizeThread(conversationId, parentMessageId);
@@ -101,31 +102,14 @@ export default function ThreadScreen() {
     if (!parentMessage) return null;
 
     const isOwnMessage = parentMessage.senderId === user?.id;
+    const senderName = getSenderName(parentMessage.senderId);
 
     return (
       <View style={styles.parentMessageContainer}>
-        <View style={styles.parentMessageHeader}>
-          <View style={styles.headerLeft}>
-            <Ionicons name="chatbox-outline" size={16} color="#666" />
-            <Text style={styles.parentMessageLabel}>Thread</Text>
-            {replies.length > 0 && (
-              <Text style={styles.replyCount}>
-                {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
-              </Text>
-            )}
-          </View>
-          {replies.length >= 3 && (
-            <AIButton
-              onPress={handleSummarizeThread}
-              label={summary && showSummary ? 'Refresh' : 'Summarize'}
-              icon="sparkles"
-              loading={summarizing}
-              variant="secondary"
-              size="small"
-            />
-          )}
-        </View>
         <View style={styles.parentMessage}>
+          {!isOwnMessage && (
+            <Text style={styles.parentSenderName}>{senderName}</Text>
+          )}
           <View style={styles.parentMessageBubble}>
             <Text style={styles.parentMessageText}>{parentMessage.text}</Text>
             <Text style={styles.parentMessageTime}>
@@ -137,16 +121,37 @@ export default function ThreadScreen() {
     );
   };
 
+  const renderSummarizeButton = () => {
+    return (
+      <View style={styles.summarizeSection}>
+        <AIButton
+          onPress={handleSummarizeThread}
+          label="Summarize Thread"
+          icon="sparkles"
+          loading={summarizing}
+          variant="primary"
+          size="medium"
+        />
+      </View>
+    );
+  };
+
   const renderReply = ({ item }: { item: Message }) => {
     const isOwnMessage = item.senderId === user?.id;
+    const senderName = getSenderName(item.senderId);
     
     return (
-      <MessageBubble
-        message={item}
-        isOwnMessage={isOwnMessage}
-        showSenderName={false}
-        currentUserId={user?.id}
-      />
+      <View style={styles.replyContainer}>
+        {!isOwnMessage && (
+          <Text style={styles.senderName}>{senderName}</Text>
+        )}
+        <MessageBubble
+          message={item}
+          isOwnMessage={isOwnMessage}
+          showSenderName={false}
+          currentUserId={user?.id}
+        />
+      </View>
     );
   };
 
@@ -168,56 +173,94 @@ export default function ThreadScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={90}
-    >
-      <View style={styles.content}>
-        {renderParentMessage()}
-        
-        {/* AI Summary */}
-        {summary && showSummary && (
-          <ThreadSummaryCard
-            summary={summary.summary}
-            bulletPoints={summary.bulletPoints}
-            messageCount={summary.messageCount}
-            generatedAt={summary.generatedAt}
-            cached={summary.cached}
-            onDismiss={() => setShowSummary(false)}
-          />
-        )}
-        
-        {replies.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="chatbubbles-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>No replies yet</Text>
-            <Text style={styles.emptySubtext}>Be the first to reply</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={replies}
-            renderItem={renderReply}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.repliesList}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
-      </View>
-
-      <MessageInput
-        onSend={handleSendReply}
-        placeholder="Reply in thread..."
-        disabled={sending}
+    <>
+      <Stack.Screen
+        options={{
+          title: 'Thread',
+          headerTransparent: true,
+          headerBlurEffect: 'light',
+          headerStyle: {
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          },
+          headerTitleStyle: {
+            color: '#007AFF',
+            fontWeight: '600',
+          },
+        }}
       />
-    </KeyboardAvoidingView>
+      <LinearGradient
+        colors={['#E0E7FF', '#F8F9FF', '#FFFFFF']}
+        style={styles.gradient}
+      >
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+        >
+          <ScrollView 
+            style={styles.contentWrapper}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Summarize Button */}
+            {renderSummarizeButton()}
+            
+            {/* Parent Message */}
+            {renderParentMessage()}
+            
+            {/* AI Summary */}
+            {summary && showSummary && (
+              <ThreadSummaryCard
+                summary={summary.summary}
+                bulletPoints={summary.bulletPoints}
+                messageCount={summary.messageCount}
+                generatedAt={summary.generatedAt}
+                cached={summary.cached}
+                onDismiss={() => setShowSummary(false)}
+              />
+            )}
+
+            {/* Replies */}
+            {replies.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="chatbubbles-outline" size={48} color="#ccc" />
+                <Text style={styles.emptyText}>No replies yet</Text>
+                <Text style={styles.emptySubtext}>Be the first to reply</Text>
+              </View>
+            ) : (
+              <View style={styles.repliesContainer}>
+                {replies.map((item) => (
+                  <View key={item.id}>
+                    {renderReply({ item })}
+                  </View>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+
+          <BlurView intensity={80} tint="light" style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <MessageInput
+                onSend={handleSendReply}
+                placeholder="Reply in thread..."
+                disabled={sending}
+                noWrapper={true}
+              />
+            </View>
+          </BlurView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   loadingContainer: {
     flex: 1,
@@ -239,65 +282,74 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  parentMessageContainer: {
-    backgroundColor: '#f9f9f9',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    paddingBottom: 16,
-  },
-  parentMessageHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  contentWrapper: {
     flex: 1,
   },
-  replyCount: {
-    fontSize: 12,
-    color: '#999',
-    marginLeft: 4,
+  scrollContent: {
+    paddingTop: 80,
+    paddingBottom: 20,
   },
-  parentMessageLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
+  summarizeSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  repliesContainer: {
+    paddingTop: 8,
+  },
+  parentMessageContainer: {
+    backgroundColor: '#f5f8ff',
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 0,
   },
   parentMessage: {
     paddingHorizontal: 16,
   },
+  parentSenderName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 4,
+    marginLeft: 4,
+  },
   parentMessageBubble: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
-    padding: 12,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#e0e0e0',
+    minHeight: 60,
   },
   parentMessageText: {
-    fontSize: 15,
-    color: '#000',
-    lineHeight: 20,
+    fontSize: 16,
+    color: '#000000',
+    lineHeight: 24,
+    fontWeight: '400',
   },
   parentMessageTime: {
     fontSize: 11,
     color: '#999',
     marginTop: 8,
   },
-  repliesList: {
-    paddingTop: 16,
-    paddingBottom: 16,
+  replyContainer: {
+    marginBottom: 8,
+    paddingHorizontal: 16,
+  },
+  senderName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 4,
+    marginLeft: 4,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
+    minHeight: 200,
   },
   emptyText: {
     fontSize: 18,
@@ -309,6 +361,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ccc',
     marginTop: 4,
+  },
+  inputContainer: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 122, 255, 0.1)',
+    overflow: 'hidden',
+  },
+  inputWrapper: {
+    padding: 12,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 16,
   },
 });
 

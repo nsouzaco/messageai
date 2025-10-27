@@ -139,9 +139,9 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   smallButton: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    minWidth: 80,
+    minWidth: 70,
   },
   largeButton: {
     paddingHorizontal: 24,

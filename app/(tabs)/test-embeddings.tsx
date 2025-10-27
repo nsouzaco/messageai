@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useChat } from '@/contexts/ChatContext';
-import { batchGenerateEmbeddings, detectPriority, extractActionItems } from '@/services/firebase/ai';
+import { batchGenerateEmbeddings, detectPriority, detectScheduling, extractActionItems } from '@/services/firebase/ai';
 import { Ionicons } from '@expo/vector-icons';
 import { collection, getDocs, getFirestore, limit, orderBy, query, where } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -21,9 +21,11 @@ export default function TestEmbeddingsScreen() {
   const [generating, setGenerating] = useState<string | null>(null);
   const [extracting, setExtracting] = useState<string | null>(null);
   const [detectingPriority, setDetectingPriority] = useState<string | null>(null);
+  const [detectingScheduling, setDetectingScheduling] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, any>>({});
   const [actionResults, setActionResults] = useState<Record<string, any>>({});
   const [priorityResults, setPriorityResults] = useState<Record<string, any>>({});
+  const [schedulingResults, setSchedulingResults] = useState<Record<string, any>>({});
   const [pineconeTest, setPineconeTest] = useState<any>(null);
   const [testingPinecone, setTestingPinecone] = useState(false);
 
@@ -136,13 +138,39 @@ export default function TestEmbeddingsScreen() {
     }
   };
 
+  const handleDetectScheduling = async (conversationId: string) => {
+    setDetectingScheduling(conversationId);
+    try {
+      const suggestion = await detectScheduling(conversationId);
+      
+      if (suggestion) {
+        setSchedulingResults(prev => ({ ...prev, [conversationId]: suggestion }));
+        Alert.alert(
+          '📅 Scheduling Detected!',
+          `${suggestion.reason}\n\n` +
+          `Suggested ${suggestion.suggestedTimes.length} time(s).\n\n` +
+          `Check the Calendar tab to accept a meeting time!`
+        );
+      } else {
+        Alert.alert('No Scheduling Intent', 'No scheduling needs detected in this conversation.');
+      }
+    } catch (error: any) {
+      console.error('Scheduling detection error:', error);
+      Alert.alert('Error', error.message || 'Failed to detect scheduling');
+    } finally {
+      setDetectingScheduling(null);
+    }
+  };
+
   const renderConversation = ({ item }: { item: any }) => {
     const result = results[item.id];
     const actionResult = actionResults[item.id];
     const priorityResult = priorityResults[item.id];
+    const schedulingResult = schedulingResults[item.id];
     const isGenerating = generating === item.id;
     const isExtracting = extracting === item.id;
     const isDetectingPriority = detectingPriority === item.id;
+    const isDetectingScheduling = detectingScheduling === item.id;
 
     return (
       <View style={styles.conversationCard}>
@@ -212,7 +240,29 @@ export default function TestEmbeddingsScreen() {
               </>
             )}
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.schedulingButton, isDetectingScheduling && styles.buttonDisabled]}
+            onPress={() => handleDetectScheduling(item.id)}
+            disabled={isDetectingScheduling}
+          >
+            {isDetectingScheduling ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="calendar" size={14} color="#fff" />
+                <Text style={styles.buttonText}>Schedule</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
+        {schedulingResult && (
+          <View style={styles.result}>
+            <Ionicons name="checkmark-circle" size={16} color="#34C759" />
+            <Text style={styles.resultText}>
+              {schedulingResult.suggestedTimes.length} time(s) suggested
+            </Text>
+          </View>
+        )}
       </View>
     );
   };
@@ -364,6 +414,9 @@ const styles = StyleSheet.create({
   },
   priorityButton: {
     backgroundColor: '#FF3B30',
+  },
+  schedulingButton: {
+    backgroundColor: '#FF9500',
   },
   buttonDisabled: {
     opacity: 0.5,
