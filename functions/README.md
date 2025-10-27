@@ -304,3 +304,4 @@ Cloud Functions have a cold start time. The first request may be slow. Consider 
 
 Proprietary - Aligna
 
+
